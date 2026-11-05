@@ -56,7 +56,7 @@ export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: (
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h2>
+      <h1 className="text-[26px] font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h1>
       <form className="cartao space-y-3" onSubmit={(e) => {
         e.preventDefault()
         void tentar(async () => { await salvarLancamento(paraLancamento(f)); setF(vazio()) })
@@ -106,15 +106,15 @@ export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: (
       </form>
 
       <ul className="cartao lista">
-        {dados.lancamentos.length === 0 && <li className="py-2 text-sm text-slate-400">Nenhum lançamento.</li>}
+        {dados.lancamentos.length === 0 && <li className="py-2 text-sm text-suave">Nenhum lançamento.</li>}
         {dados.lancamentos.map((l) => (
           <li key={l.id} className="space-y-1 py-2 text-sm">
             <div className="flex justify-between gap-2">
               <span className="min-w-0 truncate font-medium">{l.descricao}</span>
-              <Dinheiro v={l.valor} className={l.natureza === 'receita' ? 'text-emerald-400' : 'text-rose-400'} />
+              <Dinheiro v={l.valor} className={l.natureza === 'receita' ? 'font-medium text-ok-texto' : 'font-medium'} />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-slate-400">{resumoRec(l.recorrencia)}</span>
+              <span className="text-xs text-suave">{resumoRec(l.recorrencia)}</span>
               <span className="flex gap-2">
                 <button className="btn-sec" disabled={ocupado} onClick={() => { setF(doLancamento(l)); window.scrollTo({ top: 0 }) }}>Editar</button>
                 <button className="btn-perigo" disabled={ocupado} onClick={() => { if (confirm(`Excluir ${l.descricao}?`)) void tentar(() => excluir('lancamentos', l.id)) }}>Excluir</button>

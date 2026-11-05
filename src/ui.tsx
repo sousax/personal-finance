@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
 import { formatarBRL } from './domain'
 import type { Centavos } from './domain'
@@ -9,13 +9,31 @@ export const Dinheiro = ({ v, className = '' }: { v: Centavos; className?: strin
 
 export const Campo = ({ rotulo, children }: { rotulo: string; children: ReactNode }) => (
   <label className="block">
-    <span className="mb-1 block text-sm text-slate-400">{rotulo}</span>
+    <span className="mb-1 block text-sm font-medium text-suave">{rotulo}</span>
     {children}
   </label>
 )
 
 export const Erro = ({ msg }: { msg: string | null }) =>
-  msg ? <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300">{msg}</p> : null
+  msg ? <p role="alert" className="rounded-xl border border-perigo/30 bg-perigo/5 p-3 text-sm text-perigo-texto">{msg}</p> : null
+
+// Marca OwnFin: degraus monocromáticos, só o do topo com degradê vinho → violeta
+export function Logo({ escuro = false, tamanho = 26 }: { escuro?: boolean; tamanho?: number }) {
+  const id = useId()
+  const barra = escuro ? '#fff' : '#191C1F'
+  const [de, ate] = escuro ? ['#B02A45', '#8A70FF'] : ['#6B1A2B', '#6A4BFF']
+  return (
+    <span className={`flex items-center gap-2.5 font-titulo font-semibold tracking-[-0.035em] ${escuro ? 'text-white' : 'text-tinta'}`} style={{ fontSize: tamanho * 0.75 }}>
+      <svg width={tamanho} height={tamanho} viewBox="0 0 56 56" aria-hidden="true">
+        <defs><linearGradient id={id} x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor={de} /><stop offset="1" stopColor={ate} /></linearGradient></defs>
+        <rect x="6" y="34" width="12" height="16" rx="6" fill={barra} />
+        <rect x="22" y="22" width="12" height="28" rx="6" fill={barra} />
+        <rect x="38" y="8" width="12" height="42" rx="6" fill={`url(#${id})`} />
+      </svg>
+      OwnFin
+    </span>
+  )
+}
 
 export function mensagemErro(e: unknown): string {
   const m = (e as Error).message ?? String(e)

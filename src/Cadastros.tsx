@@ -15,7 +15,7 @@ export function Cartoes({ dados, recarregar }: Props) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Cartões</h2>
+      <h1 className="text-[26px] font-semibold">Cartões</h1>
       <form className="cartao space-y-3" onSubmit={(e) => {
         e.preventDefault()
         void rodar(async () => {
@@ -34,10 +34,10 @@ export function Cartoes({ dados, recarregar }: Props) {
         <div className="flex gap-2"><button className="btn" disabled={ocupado}>{ocupado ? 'Salvando...' : id ? 'Salvar' : 'Adicionar cartão'}</button>{id && <button type="button" className="btn-sec" disabled={ocupado} onClick={limpar}>Cancelar</button>}</div>
       </form>
       <ul className="cartao lista">
-        {dados.cartoes.length === 0 && <li className="py-2 text-sm text-slate-400">Nenhum cartão.</li>}
+        {dados.cartoes.length === 0 && <li className="py-2 text-sm text-suave">Nenhum cartão.</li>}
         {dados.cartoes.map((c) => (
           <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-sm">
-            <span>{c.nome} <span className="text-slate-400">fecha {c.diaFechamento}, vence {c.diaVencimento}</span></span>
+            <span>{c.nome} <span className="text-suave">fecha {c.diaFechamento}, vence {c.diaVencimento}</span></span>
             <span className="flex gap-2">
               <button className="btn-sec" disabled={ocupado} onClick={() => { setId(c.id); setNome(c.nome); setFecha(String(c.diaFechamento)); setVence(String(c.diaVencimento)) }}>Editar</button>
               <button className="btn-perigo" disabled={ocupado} onClick={() => { if (confirm(`Excluir ${c.nome}?`)) void rodar(() => excluir('cartoes', c.id)) }}>Excluir</button>
@@ -58,20 +58,20 @@ export function Categorias({ dados, recarregar }: Props) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Categorias</h2>
+      <h1 className="text-[26px] font-semibold">Categorias</h1>
       <form className="cartao space-y-3" onSubmit={(e) => {
         e.preventDefault()
         void rodar(async () => { await salvarCategoria({ id, nome: nome.trim(), cor }); limpar() })
       }}>
         <div className="flex gap-3">
           <div className="flex-1"><Campo rotulo="Nome"><input className="campo" required value={nome} onChange={(e) => setNome(e.target.value)} /></Campo></div>
-          <Campo rotulo="Cor"><input type="color" className="h-[42px] w-14 rounded-lg border border-linha" value={cor} onChange={(e) => setCor(e.target.value)} /></Campo>
+          <Campo rotulo="Cor"><input type="color" className="h-[42px] w-14 rounded-xl border border-linha" value={cor} onChange={(e) => setCor(e.target.value)} /></Campo>
         </div>
         <Erro msg={erro} />
         <div className="flex gap-2"><button className="btn" disabled={ocupado}>{ocupado ? 'Salvando...' : id ? 'Salvar' : 'Adicionar categoria'}</button>{id && <button type="button" className="btn-sec" disabled={ocupado} onClick={limpar}>Cancelar</button>}</div>
       </form>
       <ul className="cartao lista">
-        {dados.categorias.length === 0 && <li className="py-2 text-sm text-slate-400">Nenhuma categoria.</li>}
+        {dados.categorias.length === 0 && <li className="py-2 text-sm text-suave">Nenhuma categoria.</li>}
         {dados.categorias.map((c) => (
           <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-sm">
             <span className="flex items-center gap-2"><i className="inline-block h-3 w-3 rounded-full" style={{ background: c.cor }} />{c.nome}</span>
