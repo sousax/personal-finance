@@ -27,7 +27,7 @@ export function Mes({ dados, mes, setMes }: { dados: Dados; mes: MesRef; setMes:
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button className="btn-sec" aria-label="Mês anterior" onClick={() => setMes(somarMeses(mes, -1))}>&larr;</button>
-        <h2 className="text-lg font-semibold capitalize">{mesParaTexto(mes)}</h2>
+        <h2 className="text-lg font-semibold first-letter:uppercase">{mesParaTexto(mes)}</h2>
         <button className="btn-sec" aria-label="Próximo mês" onClick={() => setMes(somarMeses(mes, 1))}>&rarr;</button>
       </div>
 

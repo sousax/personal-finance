@@ -12,7 +12,7 @@ export function Futuro({ dados, mes }: { dados: Dados; mes: MesRef }) {
       <ul className="cartao divide-y divide-slate-100">
         {meses.map((m) => (
           <li key={`${m.mes.ano}-${m.mes.mes}`} className="flex justify-between py-2 text-sm">
-            <span className="capitalize">{mesParaTexto(m.mes)}</span>
+            <span className="first-letter:uppercase">{mesParaTexto(m.mes)}</span>
             <Dinheiro v={m.valor} className={m.valor === 0 ? 'text-slate-400' : 'font-medium'} />
           </li>
         ))}
