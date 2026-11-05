@@ -28,16 +28,18 @@ export async function carregar(): Promise<Dados> {
 }
 
 export const salvarCartao = (c: Omit<Cartao, 'id'> & { id?: string }) => {
-  const linha = { nome: c.nome, dia_fechamento: c.diaFechamento, dia_vencimento: c.diaVencimento }
-  return ok(supabase.from('cartoes').upsert(c.id ? { id: c.id, ...linha } : linha))
+  const linha: Record<string, unknown> = { nome: c.nome, dia_fechamento: c.diaFechamento, dia_vencimento: c.diaVencimento }
+  if (c.id) linha.id = c.id
+  return ok(supabase.from('cartoes').upsert(linha))
 }
 
 export const salvarCategoria = (c: Omit<Categoria, 'id'> & { id?: string }) =>
-  ok(supabase.from('categorias').upsert(c.id ? { id: c.id, nome: c.nome, cor: c.cor } : { nome: c.nome, cor: c.cor }))
+  ok(supabase.from('categorias').upsert({ ...(c.id ? { id: c.id } : {}), nome: c.nome, cor: c.cor }))
 
 export const salvarLancamento = (l: Omit<Lancamento, 'id'> & { id?: string }) => {
-  const linha = paraLinha(l)
-  return ok(supabase.from('lancamentos').upsert(l.id ? { id: l.id, ...linha } : linha))
+  const linha: Record<string, unknown> = paraLinha(l)
+  if (l.id) linha.id = l.id
+  return ok(supabase.from('lancamentos').upsert(linha))
 }
 
 export const excluir = (tabela: 'cartoes' | 'categorias' | 'lancamentos', id: string) =>
