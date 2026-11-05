@@ -7,8 +7,8 @@
   - [x] Independent workstreams. n/a: um app pequeno, UI depende do domínio e do schema.
   - [x] Shared mutable state. n/a: um único delegate escreve no repo.
   - [x] Smallest safe decomposition. Um worker (sonnet) com o sketch como contrato. Dividir UI e domínio entre dois custaria mais em coordenação do que economiza.
-- [ ] 4. Delegate code-writing to a subagent using your configured feature model.
-- [ ] 5. Verify on the matching surface.
-- [ ] 6. Rebase into small, ordered commits. Stack follow-ups.
+- [x] 4. Delegate code-writing to a subagent using your configured feature model.
+- [x] 5. Verify on the matching surface.
+- [x] 6. Rebase into small, ordered commits. Stack follow-ups.
 - [ ] 7. If the design is contested, `interrogate` before shipping. skip: design não contestado.
 - [ ] 8. Run **Opening a PR**. skip: repo novo sem remote; deploy no Vercel só com aprovação do usuário.

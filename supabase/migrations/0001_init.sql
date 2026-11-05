@@ -4,7 +4,8 @@ create table public.cartoes (
   nome text not null check (length(trim(nome)) > 0),
   dia_fechamento int not null check (dia_fechamento between 1 and 31),
   dia_vencimento int not null check (dia_vencimento between 1 and 31),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (id, user_id)
 );
 
 create table public.categorias (
@@ -12,7 +13,8 @@ create table public.categorias (
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   nome text not null check (length(trim(nome)) > 0),
   cor text not null default '#64748b',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (id, user_id)
 );
 
 create table public.lancamentos (
@@ -21,14 +23,16 @@ create table public.lancamentos (
   natureza text not null check (natureza in ('receita', 'despesa')),
   descricao text not null check (length(trim(descricao)) > 0),
   valor_centavos bigint not null check (valor_centavos > 0),
-  categoria_id uuid references public.categorias (id) on delete set null,
-  cartao_id uuid references public.cartoes (id) on delete restrict,
+  categoria_id uuid,
+  cartao_id uuid,
   recorrencia_tipo text not null check (recorrencia_tipo in ('unica', 'mensal', 'parcelada')),
   data date,
   inicio date,
   fim date,
   parcelas int,
   created_at timestamptz not null default now(),
+  foreign key (categoria_id, user_id) references public.categorias (id, user_id) on delete set null (categoria_id),
+  foreign key (cartao_id, user_id) references public.cartoes (id, user_id) on delete restrict,
   check (cartao_id is null or natureza = 'despesa'),
   check (
     (recorrencia_tipo = 'unica' and data is not null and inicio is null and fim is null and parcelas is null)
