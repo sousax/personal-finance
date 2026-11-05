@@ -3,7 +3,7 @@ import { centavos, parseData, parseValor, valorParaTexto } from './domain'
 import type { Lancamento, Recorrencia } from './domain'
 import { excluir, salvarLancamento } from './data/api'
 import type { Dados } from './data/api'
-import { Campo, Dinheiro, Erro } from './ui'
+import { Campo, Dinheiro, Erro, useAcao } from './ui'
 
 type Tipo = Recorrencia['tipo']
 const hoje = () => new Date().toLocaleDateString('sv-SE')
@@ -51,17 +51,12 @@ const resumoRec = (r: Recorrencia) =>
 
 export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: () => Promise<void> }) {
   const [f, setF] = useState<Form>(vazio)
-  const [erro, setErro] = useState<string | null>(null)
+  const { erro, ocupado, rodar: tentar } = useAcao(recarregar)
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }))
-
-  async function tentar(fn: () => Promise<unknown>) {
-    setErro(null)
-    try { await fn(); await recarregar() } catch (e) { setErro((e as Error).message) }
-  }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h2>
+      <h2 className="text-xl font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h2>
       <form className="cartao space-y-3" onSubmit={(e) => {
         e.preventDefault()
         void tentar(async () => { await salvarLancamento(paraLancamento(f)); setF(vazio()) })
@@ -105,24 +100,24 @@ export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: (
         </div>
         <Erro msg={erro} />
         <div className="flex gap-2">
-          <button className="btn">{f.id ? 'Salvar' : 'Adicionar'}</button>
-          {f.id && <button type="button" className="btn-sec" onClick={() => setF(vazio())}>Cancelar</button>}
+          <button className="btn" disabled={ocupado}>{ocupado ? 'Salvando...' : f.id ? 'Salvar' : 'Adicionar'}</button>
+          {f.id && <button type="button" className="btn-sec" disabled={ocupado} onClick={() => setF(vazio())}>Cancelar</button>}
         </div>
       </form>
 
-      <ul className="cartao divide-y divide-slate-100">
-        {dados.lancamentos.length === 0 && <li className="py-2 text-sm text-slate-500">Nenhum lançamento.</li>}
+      <ul className="cartao lista">
+        {dados.lancamentos.length === 0 && <li className="py-2 text-sm text-slate-400">Nenhum lançamento.</li>}
         {dados.lancamentos.map((l) => (
           <li key={l.id} className="space-y-1 py-2 text-sm">
             <div className="flex justify-between gap-2">
               <span className="min-w-0 truncate font-medium">{l.descricao}</span>
-              <Dinheiro v={l.valor} className={l.natureza === 'receita' ? 'text-green-700' : ''} />
+              <Dinheiro v={l.valor} className={l.natureza === 'receita' ? 'text-emerald-400' : 'text-rose-400'} />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-slate-500">{resumoRec(l.recorrencia)}</span>
+              <span className="text-xs text-slate-400">{resumoRec(l.recorrencia)}</span>
               <span className="flex gap-2">
-                <button className="btn-sec" onClick={() => { setF(doLancamento(l)); window.scrollTo({ top: 0 }) }}>Editar</button>
-                <button className="btn-sec" onClick={() => { if (confirm(`Excluir ${l.descricao}?`)) void tentar(() => excluir('lancamentos', l.id)) }}>Excluir</button>
+                <button className="btn-sec" disabled={ocupado} onClick={() => { setF(doLancamento(l)); window.scrollTo({ top: 0 }) }}>Editar</button>
+                <button className="btn-perigo" disabled={ocupado} onClick={() => { if (confirm(`Excluir ${l.descricao}?`)) void tentar(() => excluir('lancamentos', l.id)) }}>Excluir</button>
               </span>
             </div>
           </li>

@@ -8,11 +8,17 @@ import { Mes } from './Mes'
 import { Futuro } from './Futuro'
 import { Lancamentos } from './Lancamentos'
 import { Cartoes, Categorias } from './Cadastros'
-import { Erro } from './ui'
+import { Erro, Icone } from './ui'
 import type { MesRef } from './domain'
 
-const abas = ['Mês', 'Lançamentos', 'Futuro', 'Cartões', 'Categorias'] as const
-type Aba = (typeof abas)[number]
+const abas = [
+  { nome: 'Mês', icone: 'mes' },
+  { nome: 'Lançamentos', icone: 'lancamentos' },
+  { nome: 'Futuro', icone: 'futuro' },
+  { nome: 'Cartões', icone: 'cartoes' },
+  { nome: 'Categorias', icone: 'categorias' },
+] as const
+type Aba = (typeof abas)[number]['nome']
 
 function mesAtual(): MesRef {
   const d = new Date()
@@ -31,32 +37,36 @@ function Logado() {
   useEffect(() => { void recarregar() }, [recarregar])
 
   return (
-    <div className="mx-auto max-w-2xl pb-8">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white">
-        <div className="flex items-center justify-between px-4 pt-2">
-          <strong>Controle Financeiro</strong>
-          <button className="text-sm text-slate-600 underline" onClick={() => void supabase.auth.signOut()}>Sair</button>
-        </div>
-        <nav className="flex gap-1 overflow-x-auto px-2 py-2">
-          {abas.map((a) => (
-            <button key={a} onClick={() => setAba(a)} aria-current={a === aba}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${a === aba ? 'bg-slate-900 text-white' : 'text-slate-700'}`}>{a}</button>
-          ))}
-        </nav>
-      </header>
-      <main className="space-y-4 p-4">
-        <Erro msg={erro} />
-        {dados && dados.rejeitadas.length > 0 && <Erro msg={`${dados.rejeitadas.length} registro(s) inválido(s) ignorado(s): ${dados.rejeitadas.join('; ')}`} />}
-        {!dados ? (erro ? null : <p className="text-sm text-slate-500">Carregando...</p>) : (
-          <>
-            {aba === 'Mês' && <Mes dados={dados} mes={mes} setMes={setMes} />}
-            {aba === 'Lançamentos' && <Lancamentos dados={dados} recarregar={recarregar} />}
-            {aba === 'Futuro' && <Futuro dados={dados} mes={mes} />}
-            {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} />}
-            {aba === 'Categorias' && <Categorias dados={dados} recarregar={recarregar} />}
-          </>
-        )}
-      </main>
+    <div className="min-h-screen md:pl-56">
+      <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-linha bg-superficie/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:inset-y-0 md:right-auto md:w-56 md:flex-col md:gap-1 md:border-r md:border-t-0 md:p-3">
+        <div className="hidden px-3 pb-4 pt-3 text-lg font-bold md:block">Controle<span className="text-emerald-400">.</span></div>
+        {abas.map((a) => (
+          <button key={a.nome} onClick={() => setAba(a.nome)} aria-current={a.nome === aba ? 'page' : undefined}
+            className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2 text-[11px] font-medium md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-sm ${a.nome === aba ? 'text-emerald-400 md:bg-emerald-400/10' : 'text-slate-400 hover:text-slate-200'}`}>
+            <Icone nome={a.icone} className="h-[22px] w-[22px] md:h-5 md:w-5" />{a.nome}
+          </button>
+        ))}
+        <button className="hidden px-3 py-2.5 text-left text-sm text-slate-500 hover:text-slate-300 md:mt-auto md:block" onClick={() => void supabase.auth.signOut()}>Sair</button>
+      </nav>
+      <div className="mx-auto max-w-2xl pb-28 md:pb-10">
+        <header className="flex items-center justify-between px-4 pt-4 md:hidden">
+          <strong className="text-lg">Controle<span className="text-emerald-400">.</span></strong>
+          <button className="text-sm text-slate-400" onClick={() => void supabase.auth.signOut()}>Sair</button>
+        </header>
+        <main className="space-y-4 p-4 md:pt-8">
+          <Erro msg={erro} />
+          {dados && dados.rejeitadas.length > 0 && <Erro msg={`${dados.rejeitadas.length} registro(s) inválido(s) ignorado(s): ${dados.rejeitadas.join('; ')}`} />}
+          {!dados ? (erro ? null : <p className="text-sm text-slate-400">Carregando...</p>) : (
+            <>
+              {aba === 'Mês' && <Mes dados={dados} mes={mes} setMes={setMes} />}
+              {aba === 'Lançamentos' && <Lancamentos dados={dados} recarregar={recarregar} />}
+              {aba === 'Futuro' && <Futuro dados={dados} mes={mes} />}
+              {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} />}
+              {aba === 'Categorias' && <Categorias dados={dados} recarregar={recarregar} />}
+            </>
+          )}
+        </main>
+      </div>
     </div>
   )
 }
