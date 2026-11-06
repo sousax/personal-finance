@@ -9,6 +9,11 @@ const oc = (natureza: Ocorrencia['natureza'], descricao: string, reais: number):
 const grupos = (os: Ocorrencia[]) => visaoGeral(os).movimentos.map((m) => m.grupo)
 
 describe('visaoGeral', () => {
+  it('pix só casa como palavra, e lançamento sem prefixo bancário não vira entre contas', () => {
+    expect(grupos([oc('despesa', 'Pixel Store', 10)])).toEqual(['shop'])
+    expect(grupos([oc('receita', 'Reembolso', 50), oc('despesa', 'Reembolso', 50)])).toEqual(['inc', 'shop'])
+  })
+
   it('caixinha: reservado é despesa, retirado é receita, líquido por nome', () => {
     const v = visaoGeral([
       oc('despesa', 'Dinheiro reservado Viagem', 500),

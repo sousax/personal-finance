@@ -38,7 +38,7 @@ function classificar(o: Ocorrencia): { grupo: Grupo; caixinha: string | null } {
   if (o.natureza === 'receita') return { grupo: 'inc', caixinha: null }
   const d = semAcento(o.descricao)
   if (/emprestimo|financiamento/.test(d)) return { grupo: 'loan', caixinha: null }
-  if (/pix|transferencia enviada/.test(d) && !EMPRESA.test(d)) return { grupo: 'ppl', caixinha: null }
+  if (/\bpix\b|transferencia enviada/.test(d) && !EMPRESA.test(d)) return { grupo: 'ppl', caixinha: null }
   return { grupo: 'shop', caixinha: null }
 }
 
@@ -48,10 +48,10 @@ export function visaoGeral(ocorrencias: Ocorrencia[]): VisaoGeral {
   // Entrada e saída do mesmo valor e contraparte são transferência entre contas próprias
   const proprios = new Set<number>()
   base.forEach((r, i) => {
-    if (r.o.natureza !== 'receita' || r.grupo === 'box' || proprios.has(i)) return
+    if (r.o.natureza !== 'receita' || r.grupo === 'box' || !r.prefixo || proprios.has(i)) return
     const chave = semAcento(r.nome)
     if (!chave) return
-    const j = base.findIndex((s, k) => s.o.natureza === 'despesa' && s.grupo !== 'box' && !proprios.has(k) && s.o.valor === r.o.valor && semAcento(s.nome) === chave)
+    const j = base.findIndex((s, k) => s.o.natureza === 'despesa' && s.grupo !== 'box' && s.prefixo && !proprios.has(k) && s.o.valor === r.o.valor && semAcento(s.nome) === chave)
     if (j >= 0) { proprios.add(i); proprios.add(j) }
   })
 

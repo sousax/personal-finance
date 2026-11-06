@@ -66,7 +66,7 @@ function Movimentacoes({ movimentos, fmt }: { movimentos: Movimento[]; fmt: Form
         })}
       </ul>
       {lista.length > POR_PAGINA && (
-        <button className="btn-sec mt-2 w-full" onClick={() => setAberto(!aberto)}>{aberto ? 'Mostrar menos' : `Ver todas (${lista.length})`}</button>
+        <button className="btn-sec mx-auto mt-2 block" onClick={() => setAberto(!aberto)}>{aberto ? 'Mostrar menos' : `Ver todas (${lista.length})`}</button>
       )}
     </section>
   )
@@ -97,8 +97,8 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
   ]
   const linhas = [
     { rotulo: 'Salário', texto: fmt(v.salario), v: v.salario, cor: '#16a34a', negrito: true, classe: 'text-ok-texto' },
-    ...v.gastosPorGrupo.map((g) => ({ rotulo: GRUPOS[g.grupo].label, texto: fmt(g.valor, '− '), v: g.valor as number, cor: GRUPOS[g.grupo].cor, negrito: false, classe: '' })),
-    { rotulo: 'Guardado nas caixinhas (líquido)', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas >= 0 ? '− ' : '+ '), v: v.liquidoCaixinhas, cor: INDIGO, negrito: false, classe: '' },
+    ...v.gastosPorGrupo.map((g) => ({ rotulo: GRUPOS[g.grupo].label, texto: fmt(g.valor, '− '), v: g.valor as number, cor: GRUPOS[g.grupo].cor, negrito: false, classe: 'text-tinta' })),
+    { rotulo: 'Guardado nas caixinhas (líquido)', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas >= 0 ? '− ' : '+ '), v: v.liquidoCaixinhas, cor: INDIGO, negrito: false, classe: 'text-tinta' },
     { rotulo: 'Outras entradas', texto: fmt(v.outrasEntradas, '+ '), v: v.outrasEntradas, cor: '#16a34a', negrito: false, classe: 'text-ok-texto' },
     { rotulo: 'Livre do salário', texto: fmtLivre(v.livre), v: v.livre, cor: '#18181b', negrito: true, classe: v.livre < 0 ? 'text-perigo-texto' : 'text-tinta' },
   ]
@@ -155,8 +155,8 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
         <div className="relative grid grid-cols-[repeat(auto-fit,minmax(min(180px,100%),1fr))] gap-3">
           {tiles.map((t) => (
             <div key={t.rotulo} className="rounded-2xl border border-white/10 bg-white/[.07] p-4 backdrop-blur-xl">
-              <div className="text-[13px]" style={{ color: t.cor }}>{t.rotulo}</div>
-              <div className="mt-1 font-titulo text-[22px] font-semibold tabular-nums">{t.texto}</div>
+              <div className="text-[13px] text-white/75">{t.rotulo}</div>
+              <div className="mt-1 font-titulo text-[22px] font-semibold tabular-nums" style={{ color: t.cor }}>{t.texto}</div>
             </div>
           ))}
         </div>
@@ -170,7 +170,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
               <li key={l.rotulo} className={`border-t py-3 first:border-t-0 ${l.negrito ? 'border-linha' : 'border-fundo'}`}>
                 <div className="mb-2 flex items-baseline justify-between gap-3 text-sm">
                   <span className={l.negrito ? 'font-semibold' : ''}>{l.rotulo}</span>
-                  <span className={`whitespace-nowrap tabular-nums ${l.negrito ? 'font-semibold' : 'font-medium'} ${l.classe}`} style={l.classe ? undefined : { color: l.cor }}>{l.texto}</span>
+                  <span className={`whitespace-nowrap tabular-nums ${l.negrito ? 'font-semibold' : 'font-medium'} ${l.classe}`}>{l.texto}</span>
                 </div>
                 <Barra v={Math.abs(l.v)} base={v.salario} cor={l.cor} />
               </li>
