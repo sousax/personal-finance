@@ -1,10 +1,10 @@
 import { planejarCartoes, planejarImportacao } from '../domain'
-import type { Cartao, Categoria, ContaExterna, Lancamento, Resumo, TransacaoExterna, Vinculo } from '../domain'
+import type { Cartao, Categoria, ContaExterna, Lancamento, Meta, Resumo, TransacaoExterna, Vinculo } from '../domain'
 import { supabase } from './supabase'
-import { lerCartao, lerCategoria, lerLancamento, lerLista, paraLinha } from './linhas'
-import type { LinhaCartao, LinhaCategoria, LinhaLancamento } from './linhas'
+import { lerCartao, lerCategoria, lerLancamento, lerLista, lerMeta, linhasOuVazio, paraLinha } from './linhas'
+import type { LinhaCartao, LinhaCategoria, LinhaLancamento, LinhaMeta } from './linhas'
 
-export type Dados = { cartoes: Cartao[]; categorias: Categoria[]; lancamentos: Lancamento[]; vinculos: Vinculo[]; rejeitadas: string[] }
+export type Dados = { cartoes: Cartao[]; categorias: Categoria[]; lancamentos: Lancamento[]; vinculos: Vinculo[]; metas: Meta[]; rejeitadas: string[] }
 
 async function ok<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
   const { data, error } = await p
@@ -13,20 +13,23 @@ async function ok<T>(p: PromiseLike<{ data: T | null; error: { message: string }
 }
 
 export async function carregar(): Promise<Dados> {
-  const [c, k, l, v] = await Promise.all([
+  const [c, k, l, v, m] = await Promise.all([
     ok<LinhaCartao[]>(supabase.from('cartoes').select('*').order('nome')),
     ok<LinhaCategoria[]>(supabase.from('categorias').select('*').order('nome')),
     ok<LinhaLancamento[]>(supabase.from('lancamentos').select('*').order('created_at')),
     ok<{ externo_id: string; lancamento_id: string | null; ocorrencia: string | null }[]>(supabase.from('transacoes_externas').select('externo_id, lancamento_id, ocorrencia')),
+    supabase.from('metas_caixinhas').select('*').order('nome').then((x) => linhasOuVazio<LinhaMeta>(x)),
   ])
   const cartoes = lerLista(c, lerCartao)
   const lancamentos = lerLista(l, lerLancamento)
+  const metas = lerLista(m, lerMeta)
   return {
     cartoes: cartoes.ok,
     categorias: k.map(lerCategoria),
     lancamentos: lancamentos.ok,
     vinculos: v.map((x) => ({ externoId: x.externo_id, lancamentoId: x.lancamento_id, ocorrencia: x.ocorrencia })),
-    rejeitadas: [...cartoes.rejeitadas, ...lancamentos.rejeitadas],
+    metas: metas.ok,
+    rejeitadas: [...cartoes.rejeitadas, ...lancamentos.rejeitadas, ...metas.rejeitadas],
   }
 }
 
@@ -45,7 +48,10 @@ export const salvarLancamento = (l: Omit<Lancamento, 'id'> & { id?: string }) =>
   return ok(supabase.from('lancamentos').upsert(linha))
 }
 
-export const excluir = (tabela: 'cartoes' | 'categorias' | 'lancamentos', id: string) =>
+export const salvarMeta = (m: Omit<Meta, 'id'> & { id?: string }) =>
+  ok(supabase.from('metas_caixinhas').upsert({ ...(m.id ? { id: m.id } : {}), nome: m.nome, meta_centavos: m.meta, saldo_centavos: m.saldo, saldo_em: m.saldoEm }))
+
+export const excluir = (tabela: 'cartoes' | 'categorias' | 'lancamentos' | 'metas_caixinhas', id: string) =>
   ok(supabase.from(tabela).delete().eq('id', id))
 
 export async function sincronizar(dados: Dados, desde: string): Promise<{ resumo: Resumo; avisos: string[] }> {

@@ -32,3 +32,7 @@ O botão **Sincronizar** em Lançamentos traz as transações do mês corrente d
 3. `npm run dev` não serve `/api`. Use `vercel dev` ou a produção.
 
 O Meu Pluggy atualiza a cada 24 horas e não dá para forçar. O consentimento expira após um ano e precisa ser renovado no Meu Pluggy.
+
+## Metas das caixinhas
+
+Aplique `supabase/migrations/0003_metas.sql` (SQL Editor, como na migração 0001) antes de publicar esta versão. Sem a tabela o app abre normalmente com a lista de metas vazia, mas salvar uma meta falha com o erro do banco.
