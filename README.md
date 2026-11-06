@@ -22,3 +22,13 @@ Se o projeto exigir confirmação de e-mail, desative em **Authentication > Prov
 ## Testes
 
 `npm test`. As regras de cartão e de projeção ficam em `src/domain` (TypeScript puro).
+
+## Sincronização bancária (Meu Pluggy)
+
+O botão **Sincronizar** em Lançamentos traz as transações do mês corrente do Meu Pluggy. Rodar de novo não duplica: cada transação externa fica registrada em `transacoes_externas`, mesmo depois de o lançamento ser excluído.
+
+1. Aplique `supabase/migrations/0002_pluggy.sql` (SQL Editor, como na migração 0001).
+2. Na Vercel, defina `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, `PLUGGY_ITEM_IDS` (separados por vírgula) e `PLUGGY_USER_ID` (o id do seu usuário no Supabase). Só esse usuário pode sincronizar. O segredo fica só em `api/pluggy.ts`, nunca no navegador.
+3. `npm run dev` não serve `/api`. Use `vercel dev` ou a produção.
+
+O Meu Pluggy atualiza a cada 24 horas e não dá para forçar. O consentimento expira após um ano e precisa ser renovado no Meu Pluggy.

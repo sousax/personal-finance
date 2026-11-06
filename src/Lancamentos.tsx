@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { centavos, parseData, parseValor, valorParaTexto } from './domain'
-import type { Lancamento, Recorrencia } from './domain'
-import { excluir, salvarLancamento } from './data/api'
+import type { Lancamento, Recorrencia, Resumo } from './domain'
+import { excluir, salvarLancamento, sincronizar } from './data/api'
 import type { Dados } from './data/api'
 import { Campo, Dinheiro, Erro, useAcao } from './ui'
 
 type Tipo = Recorrencia['tipo']
+const plural = (n: number, s: string) => `${n} ${s}${n === 1 ? '' : 's'}`
 const hoje = () => new Date().toLocaleDateString('sv-SE')
 
 type Form = {
@@ -52,11 +53,26 @@ const resumoRec = (r: Recorrencia) =>
 export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: () => Promise<void> }) {
   const [f, setF] = useState<Form>(vazio)
   const { erro, ocupado, rodar: tentar } = useAcao(recarregar)
+  const sincronia = useAcao(recarregar)
+  const [sync, setSync] = useState<{ resumo: Resumo; avisos: string[] } | null>(null)
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }))
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[26px] font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-[26px] font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h1>
+        <button type="button" className="btn-sec" disabled={ocupado || sincronia.ocupado} onClick={() => void sincronia.rodar(async () => {
+          setSync(null)
+          setSync(await sincronizar(dados, `${hoje().slice(0, 8)}01`))
+        })}>{sincronia.ocupado ? 'Sincronizando...' : 'Sincronizar'}</button>
+      </div>
+      <Erro msg={sincronia.erro} />
+      {sync && (
+        <div className="space-y-1 text-sm text-suave">
+          <p>{plural(sync.resumo.importadas, 'importada')}, {plural(sync.resumo.vinculadas, 'vinculada')}, {plural(sync.resumo.ignoradas, 'ignorada')}</p>
+          {sync.avisos.map((a) => <p key={a}>{a}</p>)}
+        </div>
+      )}
       <form className="cartao space-y-3" onSubmit={(e) => {
         e.preventDefault()
         void tentar(async () => { await salvarLancamento(paraLancamento(f)); setF(vazio()) })

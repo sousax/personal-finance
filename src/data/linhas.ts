@@ -1,7 +1,7 @@
 import { centavos, parseData } from '../domain'
 import type { Cartao, Categoria, DataISO, Lancamento, Recorrencia } from '../domain'
 
-export type LinhaCartao = { id: string; nome: string; dia_fechamento: number; dia_vencimento: number }
+export type LinhaCartao = { id: string; nome: string; dia_fechamento: number; dia_vencimento: number; pluggy_conta_id: string | null }
 export type LinhaCategoria = { id: string; nome: string; cor: string }
 export type LinhaLancamento = {
   id: string
@@ -22,7 +22,7 @@ const dataOk = (d: string | null): d is DataISO => d !== null && parseData(d) !=
 
 export function lerCartao(r: LinhaCartao): Cartao {
   if (!dia(r.dia_fechamento) || !dia(r.dia_vencimento)) throw new Error(`cartão inválido: ${r.id}`)
-  return { id: r.id, nome: r.nome, diaFechamento: r.dia_fechamento, diaVencimento: r.dia_vencimento }
+  return { id: r.id, nome: r.nome, diaFechamento: r.dia_fechamento, diaVencimento: r.dia_vencimento, pluggyContaId: r.pluggy_conta_id }
 }
 
 export const lerCategoria = (r: LinhaCategoria): Categoria => ({ id: r.id, nome: r.nome, cor: r.cor })

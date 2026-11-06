@@ -26,7 +26,7 @@ describe('lerLancamento', () => {
 
 describe('lerLista', () => {
   it('separa linhas rejeitadas', () => {
-    const r = lerLista([{ id: 'a', nome: 'n', dia_fechamento: 0, dia_vencimento: 5 }, { id: 'b', nome: 'n', dia_fechamento: 5, dia_vencimento: 12 }], lerCartao)
+    const r = lerLista([{ id: 'a', nome: 'n', dia_fechamento: 0, dia_vencimento: 5, pluggy_conta_id: null }, { id: 'b', nome: 'n', dia_fechamento: 5, dia_vencimento: 12, pluggy_conta_id: null }], lerCartao)
     expect(r.ok).toHaveLength(1)
     expect(r.rejeitadas).toHaveLength(1)
   })

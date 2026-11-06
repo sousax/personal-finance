@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { centavos, comprometidoFuturo, dividirParcelas, mesDoPagamento, ocorrenciasDoMes, parseValor, resumirMes } from './index'
 import type { Cartao, Lancamento } from './index'
 
-const cartao: Cartao = { id: 'c1', nome: 'Nu', diaFechamento: 5, diaVencimento: 12 }
+const cartao: Cartao = { id: 'c1', nome: 'Nu', diaFechamento: 5, diaVencimento: 12, pluggyContaId: null }
 const l = (p: Partial<Lancamento> & Pick<Lancamento, 'recorrencia'>): Lancamento => ({
   id: 'x', natureza: 'despesa', descricao: 'Item', valor: centavos(10000), categoriaId: null, cartaoId: null, ...p,
 })
