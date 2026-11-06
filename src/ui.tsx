@@ -60,6 +60,8 @@ const caminhos = {
   futuro: 'M3 17l6-6 4 4 8-8m0 0h-5m5 0v5',
   cartoes: 'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 3h18M7 15h3',
   categorias: 'M20 12.5 12.5 20a2 2 0 0 1-2.8 0L3 13.3V4h9.3l7.7 7.7a1 1 0 0 1 0 .8ZM7.5 8.5h.01',
+  visao: 'M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 0h7v7h-7v-7Z',
+  olho: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   cima: 'M12 19V5m0 0-6 6m6-6 6 6',
   baixo: 'M12 5v14m0 0-6-6m6 6 6-6',
 }
