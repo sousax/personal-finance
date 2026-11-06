@@ -27,7 +27,7 @@ export async function carregar(): Promise<Dados> {
   }
 }
 
-export const salvarCartao = (c: Omit<Cartao, 'id'> & { id?: string }) => {
+export const salvarCartao = (c: Omit<Cartao, 'id' | 'pluggyContaId'> & { id?: string }) => {
   const linha: Record<string, unknown> = { nome: c.nome, dia_fechamento: c.diaFechamento, dia_vencimento: c.diaVencimento }
   if (c.id) linha.id = c.id
   return ok(supabase.from('cartoes').upsert(linha))
