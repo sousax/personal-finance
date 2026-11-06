@@ -20,18 +20,38 @@ export const Erro = ({ msg }: { msg: string | null }) =>
 // Marca OwnFin: degraus monocromáticos, só o do topo com degradê vinho → violeta
 export function Logo({ escuro = false, tamanho = 26 }: { escuro?: boolean; tamanho?: number }) {
   const id = useId()
-  const barra = escuro ? '#fff' : '#191C1F'
-  const [de, ate] = escuro ? ['#B02A45', '#8A70FF'] : ['#6B1A2B', '#6A4BFF']
+  // O degradê claro some no fundo escuro; no tema escuro usa as cores da versão sobre painel
+  const [de, ate] = escuro || document.documentElement.dataset.theme === 'dark' ? ['#B02A45', '#8A70FF'] : ['#6B1A2B', '#6A4BFF']
   return (
     <span className={`flex items-center gap-2.5 font-titulo font-semibold tracking-[-0.035em] ${escuro ? 'text-white' : 'text-tinta'}`} style={{ fontSize: tamanho * 0.75 }}>
       <svg width={tamanho} height={tamanho} viewBox="0 0 56 56" aria-hidden="true">
         <defs><linearGradient id={id} x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor={de} /><stop offset="1" stopColor={ate} /></linearGradient></defs>
-        <rect x="6" y="34" width="12" height="16" rx="6" fill={barra} />
-        <rect x="22" y="22" width="12" height="28" rx="6" fill={barra} />
+        <rect x="6" y="34" width="12" height="16" rx="6" fill="currentColor" />
+        <rect x="22" y="22" width="12" height="28" rx="6" fill="currentColor" />
         <rect x="38" y="8" width="12" height="42" rx="6" fill={`url(#${id})`} />
       </svg>
       OwnFin
     </span>
+  )
+}
+
+const CHAVE_TEMA = 'ownfin-tema'
+
+// O index.html aplica o tema salvo antes da pintura; aqui só se lê o que ele deixou no <html>
+export function BotaoTema() {
+  const [escuro, setEscuro] = useState(() => document.documentElement.dataset.theme === 'dark')
+  function alternar() {
+    const novo = !escuro
+    setEscuro(novo)
+    document.documentElement.dataset.theme = novo ? 'dark' : 'light'
+    try { localStorage.setItem(CHAVE_TEMA, novo ? 'dark' : 'light') } catch { /* armazenamento bloqueado: vale só nesta sessão */ }
+  }
+  return (
+    <button type="button" aria-label="Alternar tema" onClick={alternar} className="grid h-10 w-10 place-items-center rounded-full border border-linha bg-superficie">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" aria-hidden="true">
+        {escuro ? <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></> : <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />}
+      </svg>
+    </button>
   )
 }
 

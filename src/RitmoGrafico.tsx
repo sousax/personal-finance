@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 
-const ACENTO = '#4f46e5'
 const ALTURA = 200
 const PAD = { e: 14, d: 14, t: 18, b: 26 }
 
@@ -42,9 +41,9 @@ export function RitmoGrafico({ gastos, salario, dias, fase, mesCurto, fmt }: {
           <line key={f} x1={PAD.e} x2={w - PAD.d} y1={PAD.t + f * (ALTURA - PAD.t - PAD.b)} y2={PAD.t + f * (ALTURA - PAD.t - PAD.b)} className="text-linha" stroke="currentColor" strokeWidth="1" />
         ))}
         <line x1={x(1)} y1={y(salario / dias)} x2={x(dias)} y2={y(salario)} stroke="#a1a1aa" strokeWidth="1.5" strokeDasharray="5 5" />
-        {ultimo > 1 && <polygon points={`${x(1)},${base} ${linha} ${x(ultimo)},${base}`} fill={ACENTO} opacity=".1" />}
-        {ultimo > 0 && <polyline points={linha} fill="none" stroke={ACENTO} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
-        {ultimo > 0 && <circle cx={x(ultimo)} cy={y(total)} r="4.5" fill={ACENTO} stroke="#fff" strokeWidth="2" />}
+        {ultimo > 1 && <polygon points={`${x(1)},${base} ${linha} ${x(ultimo)},${base}`} className="fill-acento" opacity=".1" />}
+        {ultimo > 0 && <polyline points={linha} fill="none" className="stroke-acento" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
+        {ultimo > 0 && <circle cx={x(ultimo)} cy={y(total)} r="4.5" className="fill-acento stroke-superficie" strokeWidth="2" />}
         {marcas.map((d) => (
           <text key={d} x={x(d)} y={ALTURA - 6} textAnchor={d === 1 ? 'start' : d === dias ? 'end' : 'middle'} className="fill-suave text-[11px]">
             {d === 1 || d === dias ? `${d} ${mesCurto}` : d}
@@ -52,7 +51,7 @@ export function RitmoGrafico({ gastos, salario, dias, fase, mesCurto, fmt }: {
         ))}
       </svg>
       {salario > 0 && <span className="absolute right-3.5 text-xs text-suave" style={{ top: y(salario), transform: 'translateY(-130%)' }}>Salário {fmt(salario)}</span>}
-      {ultimo > 0 && <span className="absolute whitespace-nowrap rounded-lg bg-tinta px-2 py-0.5 text-xs font-semibold text-white" style={balao}>{rotulo}</span>}
+      {ultimo > 0 && <span className="absolute whitespace-nowrap rounded-lg bg-tinta px-2 py-0.5 text-xs font-semibold text-superficie" style={balao}>{rotulo}</span>}
     </div>
   )
 }
