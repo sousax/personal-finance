@@ -25,7 +25,7 @@ export type VisaoGeral = {
 }
 
 const semAcento = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
-const titulo = (s: string) => s.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+export const titulo = (s: string) => s.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
 
 const RESERVADO = /^\s*dinheiro\s+reservado\s+(.+?)\s*$/i
 const RETIRADO = /^\s*dinheiro\s+retirado\s+(.+?)\s*$/i
@@ -38,8 +38,14 @@ function contraparte(descricao: string): { nome: string; prefixo: boolean } {
   return { nome: depois.replace(PREFIXO, '').replace(/^[\d.\s]+/, '').trim(), prefixo }
 }
 
+// Reservar é despesa, retirar é receita. O nome sai em título para casar com as metas.
+export function caixinhaDe(natureza: Ocorrencia['natureza'], descricao: string): string | null {
+  const nome = (natureza === 'despesa' ? RESERVADO : RETIRADO).exec(descricao)?.[1]
+  return nome ? titulo(nome) : null
+}
+
 function classificar(o: Ocorrencia): { grupo: Grupo; caixinha: string | null } {
-  const caixinha = (o.natureza === 'despesa' ? RESERVADO : RETIRADO).exec(o.descricao)?.[1]
+  const caixinha = caixinhaDe(o.natureza, o.descricao)
   if (caixinha) return { grupo: 'box', caixinha }
   if (o.natureza === 'receita') return { grupo: 'inc', caixinha: null }
   const d = semAcento(o.descricao)
@@ -63,8 +69,8 @@ export function visaoGeral(ocorrencias: Ocorrencia[]): VisaoGeral {
 
   const movimentos: Movimento[] = base.map((r, i) => {
     const grupo = proprios.has(i) ? 'own' : r.grupo
-    const nome = r.caixinha ? titulo(r.caixinha) : r.prefixo && r.nome ? titulo(r.nome) : r.o.descricao
-    return { ocorrencia: r.o, grupo, nome, caixinha: r.caixinha ? titulo(r.caixinha) : null }
+    const nome = r.caixinha ?? (r.prefixo && r.nome ? titulo(r.nome) : r.o.descricao)
+    return { ocorrencia: r.o, grupo, nome, caixinha: r.caixinha }
   })
 
   const entradas = movimentos.filter((m) => m.grupo === 'inc').map((m) => m.ocorrencia.valor)

@@ -1,5 +1,5 @@
 import { centavos, parseData } from '../domain'
-import type { Cartao, Categoria, DataISO, Lancamento, Recorrencia } from '../domain'
+import type { Cartao, Categoria, DataISO, Lancamento, Meta, Recorrencia } from '../domain'
 
 export type LinhaCartao = { id: string; nome: string; dia_fechamento: number; dia_vencimento: number; pluggy_conta_id: string | null }
 export type LinhaCategoria = { id: string; nome: string; cor: string }
@@ -17,12 +17,31 @@ export type LinhaLancamento = {
   parcelas: number | null
 }
 
+export type LinhaMeta = { id: string; nome: string; meta_centavos: number | string; saldo_centavos: number | string; saldo_em: string }
+
 const dia = (n: unknown) => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 31
 const dataOk = (d: string | null): d is DataISO => d !== null && parseData(d) !== null
 
 export function lerCartao(r: LinhaCartao): Cartao {
   if (!dia(r.dia_fechamento) || !dia(r.dia_vencimento)) throw new Error(`cartão inválido: ${r.id}`)
   return { id: r.id, nome: r.nome, diaFechamento: r.dia_fechamento, diaVencimento: r.dia_vencimento, pluggyContaId: r.pluggy_conta_id }
+}
+
+export function lerMeta(r: LinhaMeta): Meta {
+  const meta = Number(r.meta_centavos), saldo = Number(r.saldo_centavos)
+  if (!Number.isSafeInteger(meta) || meta <= 0) throw new Error(`meta inválida: ${r.id}`)
+  if (!Number.isSafeInteger(saldo) || saldo < 0) throw new Error(`saldo de meta inválido: ${r.id}`)
+  if (!dataOk(r.saldo_em)) throw new Error(`data de meta inválida: ${r.id}`)
+  return { id: r.id, nome: r.nome, meta: centavos(meta), saldo: centavos(saldo), saldoEm: r.saldo_em }
+}
+
+// O código de tabela ausente (PGRST205) é tolerado para o app subir antes da migração 0003; qualquer outro erro derruba.
+export function linhasOuVazio<T>(r: { data: T[] | null; error: { message: string; code?: string } | null }): T[] {
+  if (r.error) {
+    if (r.error.code === 'PGRST205') return []
+    throw new Error(r.error.message)
+  }
+  return r.data ?? []
 }
 
 export const lerCategoria = (r: LinhaCategoria): Categoria => ({ id: r.id, nome: r.nome, cor: r.cor })

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { centavos, contasDoMes, diasNoMes, formatarBRL, indiceMes, mesParaTexto, ocorrenciasDoMes, resumirMes, ritmoDoMes, ROTULO_GRUPO, somarMeses, visaoGeral } from './domain'
+import { centavos, contasDoMes, diasNoMes, formatarBRL, indiceMes, mesParaTexto, ocorrenciasDoMes, progressoMetas, resumirMes, ritmoDoMes, ROTULO_GRUPO, somarMeses, visaoGeral } from './domain'
 import type { Conta, Grupo, MesRef, Movimento } from './domain'
 import type { Dados } from './data/api'
-import { Icone } from './ui'
+import { BotaoTema, Icone } from './ui'
+import { MetasCaixinhas } from './Metas'
 import { RitmoGrafico } from './RitmoGrafico'
 import type { Fase } from './RitmoGrafico'
 
@@ -18,7 +19,7 @@ const CONTA = { icone: 'conta', cor: 'oklch(0.62 0.13 240)', bg: 'oklch(0.62 0.1
 const aparenciaConta = (c: Conta) => c.grupo === 'loan' ? GRUPOS.loan : c.grupo === 'fatura' ? { ...CONTA, icone: 'cartoes' as const } : CONTA
 const COR_CAIXINHAS = '#a5b4fc'
 const COR_LIVRE = '#86efac'
-const INDIGO = '#4f46e5'
+const ACENTO = 'rgb(var(--acento))'
 const POR_PAGINA = 8
 
 const pctBR = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
@@ -72,7 +73,7 @@ function Movimentacoes({ movimentos, fmt, mes, rotuloCartao }: { movimentos: Mov
         <div className="flex rounded-full bg-elevado p-1">
           {abas.map(([id, rotulo]) => (
             <button key={id} aria-pressed={filtro === id} onClick={() => { setFiltro(id); setAberto(false) }}
-              className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium ${filtro === id ? 'bg-superficie text-tinta shadow-[0_1px_2px_rgba(0,0,0,.08)]' : 'text-suave'}`}>{rotulo}</button>
+              className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium ${filtro === id ? 'bg-ativo text-tinta shadow-[0_1px_2px_rgba(0,0,0,.08)]' : 'text-suave'}`}>{rotulo}</button>
           ))}
         </div>
       </div>
@@ -93,7 +94,7 @@ function Movimentacoes({ movimentos, fmt, mes, rotuloCartao }: { movimentos: Mov
                 <div className="truncate text-[15px] font-medium">{m.nome}</div>
                 <div className="truncate text-[13px] text-suave">{origem} · {o.dia} {mesCurto(mes)}</div>
               </div>
-              <span className={`whitespace-nowrap text-[15px] font-semibold tabular-nums ${m.grupo === 'own' ? 'text-[#a1a1aa]' : entrada ? 'text-ok-texto' : 'text-tinta'}`}>
+              <span className={`whitespace-nowrap text-[15px] font-semibold tabular-nums ${m.grupo === 'own' ? 'text-suave' : entrada ? 'text-ok-texto' : 'text-tinta'}`}>
                 {fmt(o.valor, entrada ? '+ ' : '− ')}
               </span>
             </li>
@@ -107,7 +108,7 @@ function Movimentacoes({ movimentos, fmt, mes, rotuloCartao }: { movimentos: Mov
   )
 }
 
-function ContasDoMes({ contas, fase, diaHoje, fmt }: { contas: Conta[]; fase: Fase; diaHoje: number; fmt: Formatar }) {
+function ContasDoMes({ contas, fase, diaHoje, fmt, livre }: { contas: Conta[]; fase: Fase; diaHoje: number; fmt: Formatar; livre: string }) {
   const ordem = [...contas].sort((a, b) => Number(a.paga) - Number(b.paga) || a.dia - b.dia)
   const pagas = contas.filter((c) => c.paga)
   const soma = (cs: Conta[]) => cs.reduce((s, c) => s + c.valor, 0)
@@ -139,13 +140,20 @@ function ContasDoMes({ contas, fase, diaHoje, fmt }: { contas: Conta[]; fase: Fa
               )
             })}
           </ul>
+          {/* v.livre já desconta todas as contas do mês (gastos as inclui), então não se subtrai de novo as pendentes */}
+          {fase !== 'passado' && pagas.length < contas.length && (
+            <div className="mt-2 flex items-baseline justify-between gap-3 rounded-[14px] border border-linha bg-leve px-3.5 py-3 text-[13px]">
+              <span className="text-suave">Livre depois das contas a vencer</span>
+              <span className="whitespace-nowrap font-semibold tabular-nums">{livre}</span>
+            </div>
+          )}
         </>
       )}
     </section>
   )
 }
 
-export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; setMes: (m: MesRef) => void }) {
+export function VisaoGeral({ dados, mes, setMes, recarregar }: { dados: Dados; mes: MesRef; setMes: (m: MesRef) => void; recarregar: () => Promise<void> }) {
   const [oculto, setOculto] = useState(false)
   const [sentido, setSentido] = useState<'R' | 'L'>('R')
   const ocorrencias = ocorrenciasDoMes(dados.lancamentos, dados.cartoes, mes)
@@ -164,6 +172,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
   const diasRestantes = diasMes - diaHoje + 1
   const porDia = Math.floor(Math.max(0, v.livre) / diasRestantes)
   const contas = contasDoMes({ mes, lancamentos: dados.lancamentos, cartoes: dados.cartoes, ocorrencias, movimentos: v.movimentos, vinculos: dados.vinculos })
+  const progresso = progressoMetas(dados.metas, dados.lancamentos, v.caixinhas, mes)
   const resumo = resumirMes(dados.lancamentos, dados.cartoes, mes)
   const categorias = [...resumo.porCategoria].sort((a, b) => b[1] - a[1]).map(([id, valor]) => {
     const c = dados.categorias.find((x) => x.id === id)
@@ -186,9 +195,9 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
   const linhas = [
     { rotulo: 'Salário', texto: fmt(v.salario), v: v.salario, cor: '#16a34a', negrito: true, classe: 'text-ok-texto' },
     ...v.gastosPorGrupo.map((g) => ({ rotulo: ROTULO_GRUPO[g.grupo], texto: fmt(g.valor, '− '), v: g.valor as number, cor: GRUPOS[g.grupo].cor, negrito: false, classe: 'text-tinta' })),
-    { rotulo: 'Guardado nas caixinhas (líquido)', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas >= 0 ? '− ' : '+ '), v: v.liquidoCaixinhas, cor: INDIGO, negrito: false, classe: 'text-tinta' },
+    { rotulo: 'Guardado nas caixinhas (líquido)', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas >= 0 ? '− ' : '+ '), v: v.liquidoCaixinhas, cor: ACENTO, negrito: false, classe: 'text-tinta' },
     { rotulo: 'Outras entradas', texto: fmt(v.outrasEntradas, '+ '), v: v.outrasEntradas, cor: '#16a34a', negrito: false, classe: 'text-ok-texto' },
-    { rotulo: 'Livre do salário', texto: fmtLivre(v.livre), v: v.livre, cor: '#18181b', negrito: true, classe: v.livre < 0 ? 'text-perigo-texto' : 'text-tinta' },
+    { rotulo: 'Livre do salário', texto: fmtLivre(v.livre), v: v.livre, cor: 'rgb(var(--tinta))', negrito: true, classe: v.livre < 0 ? 'text-perigo-texto' : 'text-tinta' },
   ]
 
   const dif = ritmo.diferenca
@@ -202,6 +211,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
           <h1 className="text-[28px] font-semibold first-letter:uppercase">{mesParaTexto(mes)}</h1>
         </div>
         <div className="flex items-center gap-2">
+          <BotaoTema />
           <button className="flex h-10 items-center gap-2 rounded-full border border-linha bg-superficie px-4 text-[13px]" aria-pressed={oculto} onClick={() => setOculto(!oculto)}>
             <Icone nome="olho" className="h-4 w-4" />{oculto ? 'Mostrar' : 'Ocultar'}
           </button>
@@ -270,7 +280,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
               )}
             </div>
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-suave">
-              <span className="flex items-center gap-2"><span className="h-0.5 w-4 rounded-full" style={{ background: INDIGO }} />Gasto acumulado</span>
+              <span className="flex items-center gap-2"><span className="h-0.5 w-4 rounded-full" style={{ background: ACENTO }} />Gasto acumulado</span>
               <span className="flex items-center gap-2"><span className="w-4 border-t-2 border-dashed border-[#a1a1aa]" />Ritmo ideal (salário ÷ {diasMes} dias)</span>
             </div>
             <div className="mt-3">
@@ -279,7 +289,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
           </section>
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] items-start gap-5">
-            <ContasDoMes contas={contas} fase={fase} diaHoje={diaHoje} fmt={fmt} />
+            <ContasDoMes contas={contas} fase={fase} diaHoje={diaHoje} fmt={fmt} livre={fmtLivre(v.livre)} />
 
             <section className="cartao rounded-[20px]">
               <h2 className="text-[17px] font-semibold">Do salário à sobra</h2>
@@ -297,27 +307,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
             </section>
           </div>
 
-          <section className="cartao rounded-[20px]">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-[17px] font-semibold">Caixinhas</h2>
-              <span className="text-[13px] text-suave">Líquido no mês {fmt(v.liquidoCaixinhas, v.liquidoCaixinhas < 0 ? '− ' : '')}</span>
-            </div>
-            {v.caixinhas.length === 0 && <p className="mt-3 text-sm text-suave">Nenhuma caixinha neste mês.</p>}
-            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-3">
-              {v.caixinhas.map((c) => (
-                <div key={c.nome} className="rounded-2xl border border-[#f0f0f1] bg-[#fafafa] p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-[15px] font-semibold">{c.nome}</span>
-                    <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-[13px] font-medium tabular-nums ${c.liquido >= 0 ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-perigo/10 text-perigo-texto'}`}>{fmt(c.liquido, c.liquido >= 0 ? '+ ' : '− ')}</span>
-                  </div>
-                  <Barra v={c.retirado} base={c.guardado} cor={INDIGO} trilho="bg-[#e4e4e7]" altura="h-1.5" />
-                  <div className="mt-2 flex justify-between gap-3 text-[13px] text-suave">
-                    <span>Guardado {fmt(c.guardado)}</span><span>Retirado {fmt(c.retirado)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <MetasCaixinhas caixinhas={v.caixinhas} progresso={progresso} liquido={v.liquidoCaixinhas} fmt={fmt} recarregar={recarregar} />
 
           {categorias.length > 0 && (
             <section className="cartao rounded-[20px]">
