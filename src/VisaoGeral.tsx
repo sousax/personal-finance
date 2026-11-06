@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { centavos, contasDoMes, diasNoMes, formatarBRL, indiceMes, mesParaTexto, ocorrenciasDoMes, resumirMes, ritmoDoMes, ROTULO_GRUPO, somarMeses, visaoGeral } from './domain'
+import { centavos, contasDoMes, diasNoMes, formatarBRL, indiceMes, mesParaTexto, ocorrenciasDoMes, progressoMetas, resumirMes, ritmoDoMes, ROTULO_GRUPO, somarMeses, visaoGeral } from './domain'
 import type { Conta, Grupo, MesRef, Movimento } from './domain'
 import type { Dados } from './data/api'
 import { BotaoTema, Icone } from './ui'
+import { MetasCaixinhas } from './Metas'
 import { RitmoGrafico } from './RitmoGrafico'
 import type { Fase } from './RitmoGrafico'
 
@@ -152,7 +153,7 @@ function ContasDoMes({ contas, fase, diaHoje, fmt, livre }: { contas: Conta[]; f
   )
 }
 
-export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; setMes: (m: MesRef) => void }) {
+export function VisaoGeral({ dados, mes, setMes, recarregar }: { dados: Dados; mes: MesRef; setMes: (m: MesRef) => void; recarregar: () => Promise<void> }) {
   const [oculto, setOculto] = useState(false)
   const [sentido, setSentido] = useState<'R' | 'L'>('R')
   const ocorrencias = ocorrenciasDoMes(dados.lancamentos, dados.cartoes, mes)
@@ -171,6 +172,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
   const diasRestantes = diasMes - diaHoje + 1
   const porDia = Math.floor(Math.max(0, v.livre) / diasRestantes)
   const contas = contasDoMes({ mes, lancamentos: dados.lancamentos, cartoes: dados.cartoes, ocorrencias, movimentos: v.movimentos, vinculos: dados.vinculos })
+  const progresso = progressoMetas(dados.metas, dados.lancamentos, v.caixinhas, mes)
   const resumo = resumirMes(dados.lancamentos, dados.cartoes, mes)
   const categorias = [...resumo.porCategoria].sort((a, b) => b[1] - a[1]).map(([id, valor]) => {
     const c = dados.categorias.find((x) => x.id === id)
@@ -305,27 +307,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
             </section>
           </div>
 
-          <section className="cartao rounded-[20px]">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-[17px] font-semibold">Caixinhas</h2>
-              <span className="text-[13px] text-suave">Líquido no mês {fmt(v.liquidoCaixinhas, v.liquidoCaixinhas < 0 ? '− ' : '')}</span>
-            </div>
-            {v.caixinhas.length === 0 && <p className="mt-3 text-sm text-suave">Nenhuma caixinha neste mês.</p>}
-            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-3">
-              {v.caixinhas.map((c) => (
-                <div key={c.nome} className="rounded-2xl border border-linha bg-leve p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-[15px] font-semibold">{c.nome}</span>
-                    <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-[13px] font-medium tabular-nums ${c.liquido >= 0 ? 'bg-ok/10 text-ok-texto' : 'bg-perigo/10 text-perigo-texto'}`}>{fmt(c.liquido, c.liquido >= 0 ? '+ ' : '− ')}</span>
-                  </div>
-                  <Barra v={c.retirado} base={c.guardado} cor={ACENTO} trilho="bg-elevado" altura="h-1.5" />
-                  <div className="mt-2 flex justify-between gap-3 text-[13px] text-suave">
-                    <span>Guardado {fmt(c.guardado)}</span><span>Retirado {fmt(c.retirado)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <MetasCaixinhas caixinhas={v.caixinhas} progresso={progresso} liquido={v.liquidoCaixinhas} fmt={fmt} recarregar={recarregar} />
 
           {categorias.length > 0 && (
             <section className="cartao rounded-[20px]">

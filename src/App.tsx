@@ -58,7 +58,7 @@ function Logado() {
           {dados && dados.rejeitadas.length > 0 && <Erro msg={`${dados.rejeitadas.length} registro(s) inválido(s) ignorado(s): ${dados.rejeitadas.join('; ')}`} />}
           {!dados ? (erro ? null : <p className="text-sm text-suave">Carregando...</p>) : (
             <>
-              {aba === 'Visão Geral' && <VisaoGeral dados={dados} mes={mes} setMes={setMes} />}
+              {aba === 'Visão Geral' && <VisaoGeral dados={dados} mes={mes} setMes={setMes} recarregar={recarregar} />}
               {aba === 'Lançamentos' && <Lancamentos dados={dados} recarregar={recarregar} />}
               {aba === 'Futuro' && <Futuro dados={dados} mes={mes} />}
               {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} />}
