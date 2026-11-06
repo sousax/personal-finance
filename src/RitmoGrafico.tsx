@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 const ACENTO = '#4f46e5'
-const ALTURA = 220
+const ALTURA = 200
 const PAD = { e: 14, d: 14, t: 18, b: 26 }
 
 export type Fase = 'passado' | 'atual' | 'futuro'
@@ -33,9 +33,10 @@ export function RitmoGrafico({ gastos, salario, dias, fase, mesCurto, fmt }: {
   const virar = ultimo > 0 && x(ultimo) > w * 0.6
   const rotulo = fase === 'atual' ? `Hoje · ${fmt(total)}` : fmt(total)
   const marcas = [1, 8, 15, 22, dias]
+  const balao = { left: x(ultimo) + (virar ? -12 : 12), top: y(total), transform: `translate(${virar ? '-100%' : '0'},-50%)` }
 
   return (
-    <div ref={ref} className="w-full">
+    <div ref={ref} className="relative w-full">
       <svg width={w} height={ALTURA} role="img" aria-label="Gastos acumulados por dia" className="block">
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <line key={f} x1={PAD.e} x2={w - PAD.d} y1={PAD.t + f * (ALTURA - PAD.t - PAD.b)} y2={PAD.t + f * (ALTURA - PAD.t - PAD.b)} className="text-linha" stroke="currentColor" strokeWidth="1" />
@@ -44,15 +45,14 @@ export function RitmoGrafico({ gastos, salario, dias, fase, mesCurto, fmt }: {
         {ultimo > 1 && <polygon points={`${x(1)},${base} ${linha} ${x(ultimo)},${base}`} fill={ACENTO} opacity=".1" />}
         {ultimo > 0 && <polyline points={linha} fill="none" stroke={ACENTO} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
         {ultimo > 0 && <circle cx={x(ultimo)} cy={y(total)} r="4.5" fill={ACENTO} stroke="#fff" strokeWidth="2" />}
-        {ultimo > 0 && (
-          <text x={x(ultimo) + (virar ? -9 : 9)} y={Math.max(12, y(total) - 9)} textAnchor={virar ? 'end' : 'start'} className="fill-tinta text-[12px] font-semibold">{rotulo}</text>
-        )}
         {marcas.map((d) => (
           <text key={d} x={x(d)} y={ALTURA - 6} textAnchor={d === 1 ? 'start' : d === dias ? 'end' : 'middle'} className="fill-suave text-[11px]">
             {d === 1 || d === dias ? `${d} ${mesCurto}` : d}
           </text>
         ))}
       </svg>
+      {salario > 0 && <span className="absolute right-3.5 text-xs text-suave" style={{ top: y(salario), transform: 'translateY(-130%)' }}>Salário {fmt(salario)}</span>}
+      {ultimo > 0 && <span className="absolute whitespace-nowrap rounded-lg bg-tinta px-2 py-0.5 text-xs font-semibold text-white" style={balao}>{rotulo}</span>}
     </div>
   )
 }

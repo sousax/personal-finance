@@ -6,14 +6,16 @@ import { Icone } from './ui'
 import { RitmoGrafico } from './RitmoGrafico'
 import type { Fase } from './RitmoGrafico'
 
-const GRUPOS: Record<Grupo, { icone: Parameters<typeof Icone>[0]['nome']; cor: string; bg: string; fg: string }> = {
-  own: { icone: 'troca', cor: '#a1a1aa', bg: 'rgb(161 161 170 / .16)', fg: '#52525b' },
-  box: { icone: 'caixa', cor: 'oklch(0.52 0.2 275)', bg: 'oklch(0.52 0.2 275 / .12)', fg: 'oklch(0.42 0.18 275)' },
-  loan: { icone: 'banco', cor: 'oklch(0.5 0.16 5)', bg: 'oklch(0.5 0.16 5 / .12)', fg: 'oklch(0.45 0.15 5)' },
-  ppl: { icone: 'pessoa', cor: 'oklch(0.75 0.14 70)', bg: 'oklch(0.75 0.14 70 / .18)', fg: 'oklch(0.5 0.11 60)' },
-  shop: { icone: 'sacola', cor: 'oklch(0.65 0.11 180)', bg: 'oklch(0.65 0.11 180 / .15)', fg: 'oklch(0.45 0.09 180)' },
-  inc: { icone: 'entrada', cor: '#16a34a', bg: 'rgb(22 163 74 / .14)', fg: '#15803d' },
+const GRUPOS: Record<Grupo, { icone: Parameters<typeof Icone>[0]['nome']; cor: string; bg: string }> = {
+  own: { icone: 'troca', cor: '#a1a1aa', bg: 'rgba(161,161,170,.18)' },
+  box: { icone: 'caixa', cor: 'oklch(0.6 0.19 275)', bg: 'oklch(0.6 0.19 275 / .15)' },
+  loan: { icone: 'banco', cor: 'oklch(0.6 0.17 5)', bg: 'oklch(0.6 0.17 5 / .15)' },
+  ppl: { icone: 'pessoa', cor: 'oklch(0.72 0.14 70)', bg: 'oklch(0.75 0.14 70 / .18)' },
+  shop: { icone: 'sacola', cor: 'oklch(0.62 0.11 180)', bg: 'oklch(0.65 0.11 180 / .16)' },
+  inc: { icone: 'entrada', cor: '#16a34a', bg: 'rgba(22,163,74,.14)' },
 }
+const CONTA = { icone: 'conta', cor: 'oklch(0.62 0.13 240)', bg: 'oklch(0.62 0.13 240 / .15)' } as const
+const aparenciaConta = (c: Conta) => c.grupo === 'loan' ? GRUPOS.loan : c.grupo === 'fatura' ? { ...CONTA, icone: 'cartoes' as const } : CONTA
 const COR_CAIXINHAS = '#a5b4fc'
 const COR_LIVRE = '#86efac'
 const INDIGO = '#4f46e5'
@@ -29,9 +31,9 @@ type Formatar = (v: number, sinal?: string) => string
 function statusConta(c: Conta, fase: Fase, diaHoje: number): { texto: string; classe: string } {
   if (c.paga) return { texto: 'Pago', classe: 'bg-ok/10 text-ok-texto' }
   if (fase === 'futuro') return { texto: `Dia ${c.dia}`, classe: 'bg-elevado text-suave' }
-  if (fase === 'passado' || c.dia < diaHoje) return { texto: `Venceu dia ${c.dia}`, classe: 'bg-perigo/10 text-perigo-texto' }
+  if (fase === 'passado' || c.dia < diaHoje) return { texto: `Venceu dia ${c.dia}`, classe: 'bg-elevado text-suave' }
   const faltam = c.dia - diaHoje
-  return { texto: faltam === 0 ? 'Hoje' : `Em ${faltam} ${faltam === 1 ? 'dia' : 'dias'}`, classe: 'bg-[#fef3c7] text-[#92400e]' }
+  return { texto: faltam === 0 ? 'Hoje' : `Em ${faltam} ${faltam === 1 ? 'dia' : 'dias'}`, classe: 'bg-elevado text-tinta' }
 }
 
 function Barra({ v, base, cor, trilho = 'bg-elevado', altura = 'h-1' }: { v: number; base: number; cor: string; trilho?: string; altura?: string }) {
@@ -44,7 +46,7 @@ function Sparkline({ pontos, cor }: { pontos: number[]; cor: string }) {
   const y = (v: number) => (faixa > 0 ? 26 - ((v - min) / faixa) * 24 : 26)
   const xs = (i: number) => (pontos.length > 1 ? (i / (pontos.length - 1)) * 100 : 0)
   const d = pontos.length > 1 ? pontos.map((v, i) => `${xs(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ') : '0,26 100,26'
-  return <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="h-7 w-[100px] shrink-0" aria-hidden="true"><polyline points={d} fill="none" stroke={cor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" /></svg>
+  return <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="mt-2 block h-6 w-full overflow-visible" aria-hidden="true"><polyline points={d} fill="none" stroke={cor} strokeWidth="1.8" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>
 }
 
 function VazioPagina({ mes }: { mes: MesRef }) {
@@ -84,7 +86,7 @@ function Movimentacoes({ movimentos, fmt, mes, rotuloCartao }: { movimentos: Mov
           const origem = (o.cartaoId && rotuloCartao(o.cartaoId)) || ROTULO_GRUPO[m.grupo]
           return (
             <li key={i} title={o.descricao} className="grid grid-cols-[40px_1fr_auto] items-center gap-3.5 border-t border-linha py-3 first:border-t-0">
-              <div className="grid h-10 w-10 place-items-center rounded-xl text-[13px] font-semibold" style={{ background: g.bg, color: g.fg }}>
+              <div className="grid h-10 w-10 place-items-center rounded-xl text-[13px] font-semibold" style={{ background: g.bg, color: g.cor }}>
                 {comNome ? iniciais(m.nome) : <Icone nome={g.icone} className="h-5 w-5" />}
               </div>
               <div className="min-w-0">
@@ -121,15 +123,17 @@ function ContasDoMes({ contas, fase, diaHoje, fmt }: { contas: Conta[]; fase: Fa
           <ul className="mt-1">
             {ordem.map((c) => {
               const st = statusConta(c, fase, diaHoje)
+              const a = aparenciaConta(c)
               return (
-                <li key={c.id} className="flex items-center justify-between gap-3 border-t border-linha py-3 first:border-t-0">
+                <li key={c.id} className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 border-t border-linha py-2.5 first:border-t-0">
+                  <div className="grid h-9 w-9 place-items-center rounded-[11px]" style={{ background: a.bg, color: a.cor }}><Icone nome={a.icone} className="h-[18px] w-[18px]" /></div>
                   <div className="min-w-0">
-                    <div className="truncate text-[15px] font-medium">{c.nome}</div>
-                    <div className="truncate text-[13px] text-suave">{c.sub}</div>
+                    <div className="truncate text-sm font-medium">{c.nome}</div>
+                    <div className="truncate text-xs text-suave">{c.sub}</div>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="whitespace-nowrap text-[15px] font-semibold tabular-nums">{fmt(c.valor)}</span>
-                    <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-[12px] font-medium ${st.classe}`}>{st.texto}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="whitespace-nowrap text-sm font-semibold tabular-nums">{fmt(c.valor)}</span>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${st.classe}`}>{st.texto}</span>
                   </div>
                 </li>
               )
@@ -175,9 +179,9 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
     { rotulo: 'Livre', cor: COR_LIVRE, valor: Math.max(0, v.livre) },
   ]
   const tiles = [
-    { rotulo: 'Salário', cor: '#bbf7d0', texto: fmt(v.salario), sub: `${v.diaSalario === null ? '' : `Recebido em ${v.diaSalario} ${mesCurto(mes)} · `}${fmt(v.outrasEntradas, '+ ')} extras`, serie: null },
-    { rotulo: 'Gastos do mês', cor: '#fecdd3', texto: fmt(v.gastos), sub: v.salario > 0 ? `${pctBR.format((v.gastos / v.salario) * 100)}% do salário` : 'sem salário no mês', serie: ritmo.gastos },
-    { rotulo: 'Guardado (líquido)', cor: '#c7d2fe', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas < 0 ? '− ' : ''), sub: `${v.caixinhas.length} ${v.caixinhas.length === 1 ? 'caixinha' : 'caixinhas'}`, serie: ritmo.guardado },
+    { rotulo: 'Salário', cor: '#bbf7d0', texto: fmt(v.salario), sub: `${v.diaSalario === null ? '' : `Recebido em ${v.diaSalario} ${mesCurto(mes)} · `}${fmt(v.outrasEntradas, '+ ')} extras`, serie: null, traco: '' },
+    { rotulo: 'Gastos do mês', cor: '#fecdd3', texto: fmt(v.gastos), sub: null, serie: ritmo.gastos, traco: '#fda4af' },
+    { rotulo: 'Guardado (líquido)', cor: '#c7d2fe', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas < 0 ? '− ' : ''), sub: null, serie: ritmo.guardado, traco: '#a5b4fc' },
   ]
   const linhas = [
     { rotulo: 'Salário', texto: fmt(v.salario), v: v.salario, cor: '#16a34a', negrito: true, classe: 'text-ok-texto' },
@@ -195,7 +199,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="text-sm text-suave">Visão do mês</div>
-          <h1 className="text-[26px] font-semibold first-letter:uppercase">{mesParaTexto(mes)}</h1>
+          <h1 className="text-[28px] font-semibold first-letter:uppercase">{mesParaTexto(mes)}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button className="flex h-10 items-center gap-2 rounded-full border border-linha bg-superficie px-4 text-[13px]" aria-pressed={oculto} onClick={() => setOculto(!oculto)}>
@@ -239,15 +243,13 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
               </ul>
             </div>
 
-            <div className="relative grid grid-cols-[repeat(auto-fit,minmax(min(180px,100%),1fr))] gap-3">
+            <div className="relative grid grid-cols-[repeat(auto-fit,minmax(min(170px,100%),1fr))] gap-3">
               {tiles.map((t) => (
                 <div key={t.rotulo} className="rounded-2xl border border-white/10 bg-white/[.07] p-4">
                   <div className="text-[13px] text-white/75">{t.rotulo}</div>
-                  <div className="mt-1 flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
-                    <div className="whitespace-nowrap font-titulo text-[22px] font-semibold tabular-nums" style={{ color: t.cor }}>{t.texto}</div>
-                    {t.serie && <Sparkline pontos={t.serie} cor={t.cor} />}
-                  </div>
-                  <div className="mt-1 text-[12px] text-white/60">{t.sub}</div>
+                  <div className="mt-2 whitespace-nowrap font-titulo text-[22px] font-semibold tabular-nums" style={{ color: t.cor }}>{t.texto}</div>
+                  {t.serie && <Sparkline pontos={t.serie} cor={t.traco} />}
+                  {t.sub && <div className="mt-2 text-[12px] text-white/60">{t.sub}</div>}
                 </div>
               ))}
             </div>
@@ -267,12 +269,12 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
                 </span>
               )}
             </div>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-suave">
+              <span className="flex items-center gap-2"><span className="h-0.5 w-4 rounded-full" style={{ background: INDIGO }} />Gasto acumulado</span>
+              <span className="flex items-center gap-2"><span className="w-4 border-t-2 border-dashed border-[#a1a1aa]" />Ritmo ideal (salário ÷ {diasMes} dias)</span>
+            </div>
             <div className="mt-3">
               <RitmoGrafico gastos={ritmo.gastos} salario={v.salario} dias={diasMes} fase={fase} mesCurto={mesCurto(mes)} fmt={(n) => fmt(n)} />
-            </div>
-            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-suave">
-              <span className="flex items-center gap-2"><span className="h-0.5 w-4 rounded-full" style={{ background: INDIGO }} />Gastos acumulados</span>
-              <span className="flex items-center gap-2"><span className="w-4 border-t-2 border-dashed border-[#a1a1aa]" />Ritmo ideal (salário ÷ {diasMes} dias)</span>
             </div>
           </section>
 
