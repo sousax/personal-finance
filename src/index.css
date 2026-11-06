@@ -17,3 +17,10 @@
   .cartao { @apply rounded-2xl border border-linha bg-superficie p-5; }
   .lista { @apply divide-y divide-fundo; }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes inR { from { opacity: 0; transform: translateX(28px) } to { opacity: 1; transform: none } }
+  @keyframes inL { from { opacity: 0; transform: translateX(-28px) } to { opacity: 1; transform: none } }
+  .mes-inR { animation: inR .45s cubic-bezier(.2, .8, .2, 1) }
+  .mes-inL { animation: inL .45s cubic-bezier(.2, .8, .2, 1) }
+}

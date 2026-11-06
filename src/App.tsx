@@ -4,7 +4,6 @@ import { supabase } from './data/supabase'
 import { carregar } from './data/api'
 import type { Dados } from './data/api'
 import { Login } from './Login'
-import { Mes } from './Mes'
 import { VisaoGeral } from './VisaoGeral'
 import { Futuro } from './Futuro'
 import { Lancamentos } from './Lancamentos'
@@ -13,7 +12,6 @@ import { Erro, Icone, Logo } from './ui'
 import type { MesRef } from './domain'
 
 const abas = [
-  { nome: 'Mês', icone: 'mes' },
   { nome: 'Visão Geral', icone: 'visao' },
   { nome: 'Lançamentos', icone: 'lancamentos' },
   { nome: 'Futuro', icone: 'futuro' },
@@ -28,7 +26,7 @@ function mesAtual(): MesRef {
 }
 
 function Logado() {
-  const [aba, setAba] = useState<Aba>('Mês')
+  const [aba, setAba] = useState<Aba>('Visão Geral')
   const [mes, setMes] = useState(mesAtual)
   const [dados, setDados] = useState<Dados | null>(null)
   const [erro, setErro] = useState<string | null>(null)
@@ -44,7 +42,7 @@ function Logado() {
         <div className="hidden px-2 pb-6 md:block"><Logo escuro /></div>
         {abas.map((a) => (
           <button key={a.nome} onClick={() => setAba(a.nome)} aria-current={a.nome === aba ? 'page' : undefined}
-            className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2 text-[10px] font-medium min-[400px]:text-[11px] md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-sm ${a.nome === aba ? 'text-tinta md:bg-grafite md:text-white' : 'text-suave hover:text-tinta md:text-[#9AA1A8] md:hover:text-white'}`}>
+            className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2 text-[11px] font-medium md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-sm ${a.nome === aba ? 'text-tinta md:bg-grafite md:text-white' : 'text-suave hover:text-tinta md:text-[#9AA1A8] md:hover:text-white'}`}>
             <Icone nome={a.icone} className="h-[22px] w-[22px] md:h-5 md:w-5" />{a.nome}
           </button>
         ))}
@@ -60,7 +58,6 @@ function Logado() {
           {dados && dados.rejeitadas.length > 0 && <Erro msg={`${dados.rejeitadas.length} registro(s) inválido(s) ignorado(s): ${dados.rejeitadas.join('; ')}`} />}
           {!dados ? (erro ? null : <p className="text-sm text-suave">Carregando...</p>) : (
             <>
-              {aba === 'Mês' && <Mes dados={dados} mes={mes} setMes={setMes} />}
               {aba === 'Visão Geral' && <VisaoGeral dados={dados} mes={mes} setMes={setMes} />}
               {aba === 'Lançamentos' && <Lancamentos dados={dados} recarregar={recarregar} />}
               {aba === 'Futuro' && <Futuro dados={dados} mes={mes} />}
