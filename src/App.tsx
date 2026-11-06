@@ -38,18 +38,18 @@ function Logado() {
 
   return (
     <div className="min-h-screen md:pl-60">
-      <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-linha bg-superficie/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:inset-y-0 md:right-auto md:w-60 md:flex-col md:gap-1 md:border-0 md:bg-tinta md:px-4 md:py-6">
+      <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-20 flex border-t border-linha bg-superficie/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:inset-y-0 md:right-auto md:w-60 md:flex-col md:gap-1 md:border-0 md:bg-painel md:px-4 md:py-6">
         <div className="hidden px-2 pb-6 md:block"><Logo escuro /></div>
         {abas.map((a) => (
           <button key={a.nome} onClick={() => setAba(a.nome)} aria-current={a.nome === aba ? 'page' : undefined}
-            className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2 text-[11px] font-medium md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-sm ${a.nome === aba ? 'text-tinta md:bg-grafite md:text-white' : 'text-suave hover:text-tinta md:text-[#9AA1A8] md:hover:text-white'}`}>
+            className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2 text-[11px] font-medium md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-sm ${a.nome === aba ? 'text-tinta md:bg-painel-alto md:text-white' : 'text-suave hover:text-tinta md:text-[#9AA1A8] md:hover:text-white'}`}>
             <Icone nome={a.icone} className="h-[22px] w-[22px] md:h-5 md:w-5" />{a.nome}
           </button>
         ))}
         <button className="hidden border-t border-[#2E3236] px-3 pt-4 text-left text-sm text-[#9AA1A8] hover:text-white md:mt-auto md:block" onClick={() => void supabase.auth.signOut()}>Sair</button>
       </nav>
       <div className="mx-auto max-w-3xl pb-28 md:pb-10">
-        <header className="flex items-center justify-between bg-tinta px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between bg-painel px-4 py-3 md:hidden">
           <Logo escuro tamanho={22} />
           <button className="text-sm text-[#9AA1A8]" onClick={() => void supabase.auth.signOut()}>Sair</button>
         </header>
