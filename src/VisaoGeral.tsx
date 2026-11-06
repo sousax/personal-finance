@@ -176,7 +176,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
   ]
   const tiles = [
     { rotulo: 'Salário', cor: '#bbf7d0', texto: fmt(v.salario), sub: `${v.diaSalario === null ? '' : `Recebido em ${v.diaSalario} ${mesCurto(mes)} · `}${fmt(v.outrasEntradas, '+ ')} extras`, serie: null },
-    { rotulo: 'Gastos do mês', cor: '#fecdd3', texto: fmt(v.gastos), sub: `${v.salario > 0 ? pctBR.format((v.gastos / v.salario) * 100) : '—'}% do salário`, serie: ritmo.gastos },
+    { rotulo: 'Gastos do mês', cor: '#fecdd3', texto: fmt(v.gastos), sub: v.salario > 0 ? `${pctBR.format((v.gastos / v.salario) * 100)}% do salário` : 'sem salário no mês', serie: ritmo.gastos },
     { rotulo: 'Guardado (líquido)', cor: '#c7d2fe', texto: fmt(v.liquidoCaixinhas, v.liquidoCaixinhas < 0 ? '− ' : ''), sub: `${v.caixinhas.length} ${v.caixinhas.length === 1 ? 'caixinha' : 'caixinhas'}`, serie: ritmo.guardado },
   ]
   const linhas = [
@@ -243,8 +243,8 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
               {tiles.map((t) => (
                 <div key={t.rotulo} className="rounded-2xl border border-white/10 bg-white/[.07] p-4">
                   <div className="text-[13px] text-white/75">{t.rotulo}</div>
-                  <div className="mt-1 flex items-end justify-between gap-2">
-                    <div className="min-w-0 break-words font-titulo text-[22px] font-semibold tabular-nums" style={{ color: t.cor }}>{t.texto}</div>
+                  <div className="mt-1 flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
+                    <div className="whitespace-nowrap font-titulo text-[22px] font-semibold tabular-nums" style={{ color: t.cor }}>{t.texto}</div>
                     {t.serie && <Sparkline pontos={t.serie} cor={t.cor} />}
                   </div>
                   <div className="mt-1 text-[12px] text-white/60">{t.sub}</div>
