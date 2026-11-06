@@ -107,7 +107,7 @@ function Movimentacoes({ movimentos, fmt, mes, rotuloCartao }: { movimentos: Mov
   )
 }
 
-function ContasDoMes({ contas, fase, diaHoje, fmt }: { contas: Conta[]; fase: Fase; diaHoje: number; fmt: Formatar }) {
+function ContasDoMes({ contas, fase, diaHoje, fmt, livre }: { contas: Conta[]; fase: Fase; diaHoje: number; fmt: Formatar; livre: string }) {
   const ordem = [...contas].sort((a, b) => Number(a.paga) - Number(b.paga) || a.dia - b.dia)
   const pagas = contas.filter((c) => c.paga)
   const soma = (cs: Conta[]) => cs.reduce((s, c) => s + c.valor, 0)
@@ -139,6 +139,13 @@ function ContasDoMes({ contas, fase, diaHoje, fmt }: { contas: Conta[]; fase: Fa
               )
             })}
           </ul>
+          {/* v.livre já desconta todas as contas do mês (gastos as inclui), então não se subtrai de novo as pendentes */}
+          {fase !== 'passado' && pagas.length < contas.length && (
+            <div className="mt-2 flex items-baseline justify-between gap-3 rounded-[14px] border border-linha bg-leve px-3.5 py-3 text-[13px]">
+              <span className="text-suave">Livre depois das contas a vencer</span>
+              <span className="whitespace-nowrap font-semibold tabular-nums">{livre}</span>
+            </div>
+          )}
         </>
       )}
     </section>
@@ -280,7 +287,7 @@ export function VisaoGeral({ dados, mes, setMes }: { dados: Dados; mes: MesRef; 
           </section>
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] items-start gap-5">
-            <ContasDoMes contas={contas} fase={fase} diaHoje={diaHoje} fmt={fmt} />
+            <ContasDoMes contas={contas} fase={fase} diaHoje={diaHoje} fmt={fmt} livre={fmtLivre(v.livre)} />
 
             <section className="cartao rounded-[20px]">
               <h2 className="text-[17px] font-semibold">Do salário à sobra</h2>
