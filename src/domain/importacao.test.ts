@@ -50,6 +50,13 @@ describe('planejarImportacao', () => {
     expect(dois.vinculos).toEqual([])
   })
 
+  it('tira o sufixo de parcela da descrição, porque a projeção já numera', () => {
+    const parcela = { parcela: 3, totalParcelas: 10 }
+    expect(plano([t({ ...parcela, descricao: 'Loja 3/10' })]).lancamentos[0]?.descricao).toBe('Loja')
+    expect(plano([t({ ...parcela, descricao: 'LOJA PARC 03/10' })]).lancamentos[0]?.descricao).toBe('LOJA')
+    expect(plano([t({ ...parcela, descricao: '3/10' })]).lancamentos[0]?.descricao).toBe('3/10')
+  })
+
   it('compra 10x chegando em 3 transações vira uma só parcelada', () => {
     const r = plano([
       t({ data: '2026-01-15', valor: 100, parcela: 1, totalParcelas: 10, dataCompra: '2026-01-15', valorTotal: 1000 }),

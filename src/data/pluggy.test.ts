@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { POST } from './pluggy'
+import { POST } from '../../api/pluggy'
 
 const env = {
   PLUGGY_CLIENT_ID: 'cid', PLUGGY_CLIENT_SECRET: 'segredo-super', PLUGGY_ITEM_IDS: 'item1', PLUGGY_USER_ID: 'dono',

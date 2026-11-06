@@ -53,6 +53,7 @@ const resumoRec = (r: Recorrencia) =>
 export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: () => Promise<void> }) {
   const [f, setF] = useState<Form>(vazio)
   const { erro, ocupado, rodar: tentar } = useAcao(recarregar)
+  const sincronia = useAcao(recarregar)
   const [sync, setSync] = useState<{ resumo: Resumo; avisos: string[] } | null>(null)
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }))
 
@@ -60,11 +61,12 @@ export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-[26px] font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h1>
-        <button type="button" className="btn-sec" disabled={ocupado} onClick={() => void tentar(async () => {
+        <button type="button" className="btn-sec" disabled={ocupado || sincronia.ocupado} onClick={() => void sincronia.rodar(async () => {
           setSync(null)
           setSync(await sincronizar(dados, `${hoje().slice(0, 8)}01`))
-        })}>{ocupado ? 'Sincronizando...' : 'Sincronizar'}</button>
+        })}>{sincronia.ocupado ? 'Sincronizando...' : 'Sincronizar'}</button>
       </div>
+      <Erro msg={sincronia.erro} />
       {sync && (
         <div className="space-y-1 text-sm text-suave">
           <p>{plural(sync.resumo.importadas, 'importada')}, {plural(sync.resumo.vinculadas, 'vinculada')}, {plural(sync.resumo.ignoradas, 'ignorada')}</p>

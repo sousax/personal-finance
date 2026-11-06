@@ -55,6 +55,7 @@ export type EntradaImportacao = {
 }
 
 const PAGAMENTO_FATURA = /(pag(amento|to)|pgto).*fatura|fatura.*pag(amento|to)/i
+const SUFIXO_PARCELA = /\s*(parc(ela)?\.?\s*)?\d{1,3}\s*(\/|de)\s*\d{1,3}\s*$/i
 const chaveMes = (m: MesRef) => `${m.ano}-${String(m.mes).padStart(2, '0')}`
 const aoCentavo = (n: number) => centavos(Math.round(Math.abs(n) * 100))
 
@@ -113,7 +114,7 @@ export function planejarImportacao(e: EntradaImportacao): { lancamentos: Lancame
         !consumidas.has(`${l.id}|${oc}`))
       if (achada) { resolver(achada.id, oc); resumo.vinculadas++; continue }
       const nova: Lancamento = {
-        id: e.novoId(), natureza, descricao, valor: t.valorTotal ? aoCentavo(t.valorTotal) : centavos(valor * n),
+        id: e.novoId(), natureza, descricao: descricao.replace(SUFIXO_PARCELA, '') || descricao, valor: t.valorTotal ? aoCentavo(t.valorTotal) : centavos(valor * n),
         categoriaId: null, cartaoId, recorrencia: { tipo: 'parcelada', dataCompra: compra, parcelas: n },
       }
       parceladas.push(nova); novosLanc.push(nova); resumo.importadas++

@@ -54,7 +54,7 @@ export async function POST(req: Request): Promise<Response> {
           id: c.id, nome: str(c.marketingName) ?? str(c.name) ?? 'Conta', tipo: c.type === 'CREDIT' ? 'CREDIT' : 'BANK',
           fechamento: dia(credito.balanceCloseDate), vencimento: dia(credito.balanceDueDate),
         })
-        let proxima: string | null = `?accountId=${encodeURIComponent(String(c.id))}&dateFrom=${desde}`
+        let proxima: string | null = `?accountId=${encodeURIComponent(String(c.id))}&dateFrom=${desde}T00:00:00.000Z`
         while (proxima) {
           const pagina = await pluggy(`/v2/transactions${proxima}`, apiKey)
           for (const t of (pagina.results ?? []) as Obj[]) {
