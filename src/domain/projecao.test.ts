@@ -105,3 +105,21 @@ describe('parseValor', () => {
     expect(parseValor('1.23,4')).toBeNull()
   })
 })
+
+describe('dia da ocorrência', () => {
+  it('com cartão é o vencimento da fatura, sem cartão é o dia da data', () => {
+    const compra = l({ cartaoId: 'c1', recorrencia: { tipo: 'unica', data: '2025-03-04' } })
+    expect(ocorrenciasDoMes([compra], [cartao], { ano: 2025, mes: 3 })[0]!.dia).toBe(12)
+    expect(ocorrenciasDoMes([l({ recorrencia: { tipo: 'unica', data: '2025-03-20' } })], [], { ano: 2025, mes: 3 })[0]!.dia).toBe(20)
+  })
+
+  it('mês curto limita o dia', () => {
+    const venc31 = { ...cartao, diaVencimento: 31 }
+    const compra = l({ cartaoId: 'c1', recorrencia: { tipo: 'unica', data: '2025-01-04' } })
+    expect(ocorrenciasDoMes([compra], [venc31], { ano: 2025, mes: 1 })[0]!.dia).toBe(31)
+    const mensal = l({ recorrencia: { tipo: 'mensal', inicio: '2025-01-31', fim: null } })
+    expect(ocorrenciasDoMes([mensal], [], { ano: 2025, mes: 2 })[0]!.dia).toBe(28)
+    const noCartao = l({ cartaoId: 'c1', recorrencia: { tipo: 'unica', data: '2025-02-01' } })
+    expect(ocorrenciasDoMes([noCartao], [venc31], { ano: 2025, mes: 2 })[0]!.dia).toBe(28)
+  })
+})

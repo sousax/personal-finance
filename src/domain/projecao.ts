@@ -22,17 +22,19 @@ export function ocorrenciasDoMes(lancamentos: Lancamento[], cartoes: Cartao[], m
   const out: Ocorrencia[] = []
   for (const l of lancamentos) {
     const cartao = l.cartaoId ? (cartoes.find((c) => c.id === l.cartaoId) ?? null) : null
-    const nova = (valor: Centavos, descricao = l.descricao): Ocorrencia => ({
+    // Compra no cartão sai do caixa no vencimento da fatura, então o modelo continua baseado em caixa
+    const nova = (valor: Centavos, diaDaData: number, descricao = l.descricao): Ocorrencia => ({
       lancamentoId: l.id, natureza: l.natureza, descricao, valor,
       categoriaId: l.categoriaId, cartaoId: l.cartaoId, mes,
+      dia: Math.min(cartao ? cartao.diaVencimento : diaDaData, diasNoMes(mes.ano, mes.mes)),
     })
     const r = l.recorrencia
     if (r.tipo === 'unica') {
-      if (mesmoMes(mesDoPagamento(r.data, cartao, 0), mes)) out.push(nova(l.valor))
+      if (mesmoMes(mesDoPagamento(r.data, cartao, 0), mes)) out.push(nova(l.valor, parseData(r.data)!.dia))
     } else if (r.tipo === 'parcelada') {
       const valores = dividirParcelas(l.valor, r.parcelas)
       valores.forEach((v, i) => {
-        if (mesmoMes(mesDoPagamento(r.dataCompra, cartao, i), mes)) out.push(nova(v, `${l.descricao} (${i + 1}/${r.parcelas})`))
+        if (mesmoMes(mesDoPagamento(r.dataCompra, cartao, i), mes)) out.push(nova(v, parseData(r.dataCompra)!.dia, `${l.descricao} (${i + 1}/${r.parcelas})`))
       })
     } else {
       const ini = parseData(r.inicio)!
@@ -41,7 +43,7 @@ export function ocorrenciasDoMes(lancamentos: Lancamento[], cartoes: Cartao[], m
         const m = somarMeses(ini, k)
         const dia = Math.min(ini.dia, diasNoMes(m.ano, m.mes))
         const data = `${m.ano}-${String(m.mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
-        if (mesmoMes(mesDoPagamento(data, cartao, 0), mes)) out.push(nova(l.valor))
+        if (mesmoMes(mesDoPagamento(data, cartao, 0), mes)) out.push(nova(l.valor, dia))
       }
     }
   }

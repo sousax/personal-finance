@@ -28,6 +28,7 @@ export type Ocorrencia = {
   categoriaId: string | null
   cartaoId: string | null
   mes: MesRef
+  dia: number
 }
 
 export type ResumoMes = {
