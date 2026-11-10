@@ -80,7 +80,7 @@ function FormLancamento({ dados, f, setF, recarregar, natureza }: { dados: Dados
   const recorrencias = despesa ? [['unica', 'Única'], ['mensal', 'Todo mês'], ['parcelada', 'Parcelada']] as const : [['unica', 'Única'], ['mensal', 'Todo mês']] as const
 
   return (
-    <form className="flex max-w-full flex-[1_1_340px] flex-col gap-[18px] rounded-3xl bg-superficie p-[22px] md:sticky md:top-5 md:max-w-[440px]" onSubmit={(e) => {
+    <form className="flex w-full flex-col gap-[18px] rounded-3xl bg-superficie p-[22px] xl:sticky xl:top-5 xl:w-[400px] xl:flex-none" onSubmit={(e) => {
       e.preventDefault()
       if (!valido) return
       void rodar(async () => {
@@ -291,10 +291,10 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
         )}
       </div>
 
-      <div className="flex flex-wrap items-start gap-[18px]">
+      <div className="flex flex-col gap-[18px] xl:flex-row xl:items-start">
         <FormLancamento dados={dados} f={f} setF={setF} recarregar={recarregar} natureza={natureza} />
 
-        <div className="flex min-w-0 flex-[999_1_460px] flex-col gap-3.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
           <div className="flex flex-wrap items-center gap-2.5">
             <label className="relative flex-[1_1_220px]">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="absolute left-[15px] top-[15px] text-suave" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>

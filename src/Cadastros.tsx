@@ -238,8 +238,8 @@ export function Categorias({ dados, recarregar, verSemCategoria }: Props & { ver
         )}
       </section>
 
-      <div className="flex flex-wrap items-start gap-[18px]">
-        <form className="flex max-w-full flex-[1_1_320px] flex-col gap-[18px] rounded-3xl bg-superficie p-[22px] md:sticky md:top-5 md:max-w-[400px]" onSubmit={(e) => {
+      <div className="flex flex-col gap-[18px] xl:flex-row xl:items-start">
+        <form className="flex w-full flex-col gap-[18px] rounded-3xl bg-superficie p-[22px] xl:sticky xl:top-5 xl:w-[400px] xl:flex-none" onSubmit={(e) => {
           e.preventDefault()
           if (!valido) return
           void rodar(async () => {
@@ -252,6 +252,8 @@ export function Categorias({ dados, recarregar, verSemCategoria }: Props & { ver
             {f.id && <button type="button" onClick={() => setF(formVazio(aba))} className="rounded-full bg-elevado px-3 py-1.5 text-[13px] font-semibold">Cancelar</button>}
           </div>
 
+          <div className="grid gap-[18px] md:grid-cols-2 xl:grid-cols-1">
+          <div className="flex flex-col gap-[18px]">
           <div className="flex items-center gap-3 rounded-[18px] bg-leve p-4">
             <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[15px] text-[22px]" style={{ background: misturar(f.cor, 14), color: f.cor }}>{f.emoji || f.nome.trim()[0]?.toUpperCase()}</span>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5"><span className="truncate text-[15px] font-semibold">{f.nome.trim() || 'Nome da categoria'}</span><span className={`text-xs ${duplicada ? 'text-perigo-texto' : 'text-suave'}`}>{prevMeta}</span></span>
@@ -268,22 +270,24 @@ export function Categorias({ dados, recarregar, verSemCategoria }: Props & { ver
             <input ref={nomeRef} className="campo h-[46px] rounded-[14px] bg-leve" maxLength={24} placeholder="Ex: Mercado, Pets, Educação" value={f.nome} onChange={(e) => set({ nome: e.target.value })} />
           </label>
 
+          </div>
+          <div className="flex flex-col gap-[18px]">
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-[13px] font-semibold">Cor</legend>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="flex flex-wrap gap-2">
               {CORES.map(([nome, hex]) => (
                 <button key={hex} type="button" title={nome} aria-label={nome} aria-pressed={f.cor === hex} onClick={() => set({ cor: hex })}
-                  className="aspect-square rounded-xl text-sm font-bold text-white transition active:scale-95" style={{ background: hex, boxShadow: f.cor === hex ? `0 0 0 2px rgb(var(--superficie)), 0 0 0 4px ${hex}` : 'none' }}>{f.cor === hex ? '✓' : ''}</button>
+                  className="h-11 w-11 rounded-xl text-sm font-bold text-white transition active:scale-95" style={{ background: hex, boxShadow: f.cor === hex ? `0 0 0 2px rgb(var(--superficie)), 0 0 0 4px ${hex}` : 'none' }}>{f.cor === hex ? '✓' : ''}</button>
               ))}
             </div>
           </fieldset>
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-[13px] font-semibold">Ícone</legend>
-            <div className="grid grid-cols-8 gap-1">
+            <div className="flex flex-wrap gap-1">
               {EMOJIS.map((e) => (
                 <button key={e} type="button" aria-label={`Ícone ${e}`} aria-pressed={f.emoji === e} onClick={() => set({ emoji: f.emoji === e ? '' : e })}
-                  className="aspect-square rounded-[10px] text-lg transition hover:bg-elevado" style={f.emoji === e ? { background: misturar(f.cor, 16), boxShadow: `inset 0 0 0 1.5px ${f.cor}` } : undefined}>{e}</button>
+                  className="h-10 w-10 rounded-[10px] text-lg transition hover:bg-elevado" style={f.emoji === e ? { background: misturar(f.cor, 16), boxShadow: `inset 0 0 0 1.5px ${f.cor}` } : undefined}>{e}</button>
               ))}
             </div>
           </fieldset>
@@ -298,6 +302,8 @@ export function Categorias({ dados, recarregar, verSemCategoria }: Props & { ver
               <span className="text-xs text-suave">Fica amarelo a partir de 80% do limite e vermelho quando passa.</span>
             </label>
           )}
+          </div>
+          </div>
 
           <Erro msg={erro} />
           <button disabled={!valido || ocupado} className="h-[52px] rounded-full bg-tinta text-base font-semibold text-superficie transition active:scale-[.985] disabled:cursor-not-allowed disabled:bg-[#C9CDD1] disabled:text-white">
@@ -305,7 +311,7 @@ export function Categorias({ dados, recarregar, verSemCategoria }: Props & { ver
           </button>
         </form>
 
-        <div className="grid min-w-0 flex-[999_1_460px] grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-3.5">
+        <div className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))] gap-3.5">
           {lista.map((c) => {
             const u = uso(c.id)
             const st = statusLimite(u.valor, c.limite)
