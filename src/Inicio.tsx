@@ -4,7 +4,7 @@ import type { Conta, MesRef, Ocorrencia } from './domain'
 import type { Dados } from './data/api'
 import { BotaoTema, Icone } from './ui'
 
-export type Ir = (aba: 'Lançamentos' | 'Cartões' | 'Metas', pedido?: { natureza?: 'receita' | 'despesa'; busca?: string }) => void
+export type Ir = (aba: 'Lançamentos' | 'Cartões' | 'Metas', pedido?: { natureza?: 'receita' | 'despesa'; busca?: string; filtro?: 'semcat' }) => void
 
 const BRILHO = 'radial-gradient(120% 140% at 100% 0%,#4B37C8 0%,#3A1530 46%,#191C1F 80%)'
 const GRAD = 'linear-gradient(90deg,#8E2440,#6A4BFF)'

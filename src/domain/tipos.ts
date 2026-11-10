@@ -7,7 +7,7 @@ export type Cartao = {
   // Retrato do Pluggy na última sincronização; ausentes em cartão manual
   limite?: Centavos | null; disponivel?: Centavos | null; final?: string | null
 }
-export type Categoria = { id: string; nome: string; cor: string }
+export type Categoria = { id: string; nome: string; cor: string; tipo?: 'despesa' | 'receita'; emoji?: string | null; limite?: Centavos | null }
 
 export type Recorrencia =
   | { tipo: 'unica'; data: DataISO }

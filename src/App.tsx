@@ -21,7 +21,7 @@ const abas = [
   { nome: 'Futuro', curto: 'Futuro', icone: 'futuro' },
   { nome: 'Cartões', curto: 'Cartões', icone: 'cartoes' },
   { nome: 'Categorias', curto: 'Categ.', icone: 'categorias' },
-  { nome: 'Metas', curto: 'Metas', icone: 'meta', selo: 'Novo' },
+  { nome: 'Metas', curto: 'Metas', icone: 'meta' },
 ] as const
 type Aba = (typeof abas)[number]['nome']
 type Pedido = Parameters<Ir>[1]
@@ -58,6 +58,9 @@ function Logado({ email }: { email: string }) {
   // n troca a key de Lançamentos, para o formulário e a busca recomeçarem com o pedido
   const ir: Ir = (a, p) => { setPedido((x) => ({ n: x.n + 1, ...p })); abrir(a) }
   const sair = () => void supabase.auth.signOut()
+  const agora = mesAtual()
+  // Selo âmbar de Lançamentos: ocorrências do mês ainda sem categoria
+  const semCategoria = dados ? ocorrenciasDoMes(dados.lancamentos, dados.cartoes, agora).filter((o) => !o.categoriaId).length : 0
 
   return (
     <div className="min-h-screen md:pl-[248px]">
@@ -70,7 +73,7 @@ function Logado({ email }: { email: string }) {
               <Icone nome={a.icone} className="h-[22px] w-[22px] md:h-[18px] md:w-[18px]" />
               <span className="md:hidden">{a.curto}</span>
               <span className="hidden flex-1 text-left md:inline">{a.nome}</span>
-              {'selo' in a && <span className="hidden rounded-full bg-grad px-[7px] py-0.5 text-[10px] font-bold text-white md:inline">{a.selo}</span>}
+              {a.nome === 'Lançamentos' && semCategoria > 0 && <span className="hidden rounded-full bg-[#E0A030] px-[7px] py-0.5 text-[10px] font-bold text-white md:inline">{semCategoria}</span>}
             </button>
           ))}
         </div>
@@ -91,10 +94,10 @@ function Logado({ email }: { email: string }) {
           {!dados ? (erro ? null : <p className="text-sm text-suave">Carregando...</p>) : (
             <>
               {aba === 'Início' && <Inicio dados={dados} ir={ir} />}
-              {aba === 'Lançamentos' && <Lancamentos key={pedido.n} dados={dados} recarregar={recarregar} natureza={pedido.natureza} busca={pedido.busca} />}
+              {aba === 'Lançamentos' && <Lancamentos key={pedido.n} dados={dados} recarregar={recarregar} natureza={pedido.natureza} busca={pedido.busca} filtro={pedido.filtro} />}
               {aba === 'Futuro' && <Futuro dados={dados} mes={mesAtual()} />}
               {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} />}
-              {aba === 'Categorias' && <Categorias dados={dados} recarregar={recarregar} />}
+              {aba === 'Categorias' && <Categorias dados={dados} recarregar={recarregar} verSemCategoria={() => ir('Lançamentos', { filtro: 'semcat' })} />}
               {aba === 'Metas' && <Metas dados={dados} recarregar={recarregar} />}
             </>
           )}

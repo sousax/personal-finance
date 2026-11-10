@@ -40,7 +40,9 @@ export const salvarCartao = (c: Omit<Cartao, 'id' | 'pluggyContaId'> & { id?: st
 }
 
 export const salvarCategoria = (c: Omit<Categoria, 'id'> & { id?: string }) =>
-  ok(supabase.from('categorias').upsert({ ...(c.id ? { id: c.id } : {}), nome: c.nome, cor: c.cor }))
+  ok(supabase.from('categorias').upsert({
+    ...(c.id ? { id: c.id } : {}), nome: c.nome, cor: c.cor, tipo: c.tipo ?? 'despesa', emoji: c.emoji ?? null, limite_centavos: c.tipo === 'receita' ? null : (c.limite ?? null),
+  }))
 
 export const salvarLancamento = (l: Omit<Lancamento, 'id'> & { id?: string }) => {
   const linha: Record<string, unknown> = paraLinha(l)

@@ -3,6 +3,7 @@ const tk = (nome) => `rgb(var(--${nome}) / <alpha-value>)`
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
       fontFamily: { sans: ['Figtree', 'system-ui', 'sans-serif'], titulo: ['Poppins', 'Figtree', 'system-ui', 'sans-serif'] },

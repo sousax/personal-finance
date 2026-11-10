@@ -5,7 +5,7 @@ export type LinhaCartao = {
   id: string; nome: string; dia_fechamento: number; dia_vencimento: number; pluggy_conta_id: string | null
   limite_centavos?: number | string | null; disponivel_centavos?: number | string | null; final?: string | null
 }
-export type LinhaCategoria = { id: string; nome: string; cor: string }
+export type LinhaCategoria = { id: string; nome: string; cor: string; tipo?: string; emoji?: string | null; limite_centavos?: number | string | null }
 export type LinhaLancamento = {
   id: string
   natureza: string
@@ -53,7 +53,9 @@ export function linhasOuVazio<T>(r: { data: T[] | null; error: { message: string
   return r.data ?? []
 }
 
-export const lerCategoria = (r: LinhaCategoria): Categoria => ({ id: r.id, nome: r.nome, cor: r.cor })
+export const lerCategoria = (r: LinhaCategoria): Categoria => ({
+  id: r.id, nome: r.nome, cor: r.cor, tipo: r.tipo === 'receita' ? 'receita' : 'despesa', emoji: r.emoji ?? null, limite: centavosOuNull(r.limite_centavos),
+})
 
 function lerRecorrencia(r: LinhaLancamento): Recorrencia {
   switch (r.recorrencia_tipo) {
