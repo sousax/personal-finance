@@ -83,7 +83,7 @@ function Logado({ email }: { email: string }) {
           <button className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-[#9AA1A8] hover:text-white" onClick={sair}>Sair</button>
         </div>
       </nav>
-      <div className={`mx-auto pb-28 md:pb-12 ${aba === 'Futuro' || aba === 'Metas' ? 'max-w-3xl' : 'max-w-[1272px]'}`}>
+      <div className={`mx-auto pb-28 md:pb-12 ${aba === 'Metas' ? 'max-w-3xl' : 'max-w-[1272px]'}`}>
         <header className="flex items-center justify-between bg-painel px-4 py-3 md:hidden">
           <Logo escuro tamanho={22} />
           <button className="text-sm text-[#9AA1A8]" onClick={sair}>Sair</button>
