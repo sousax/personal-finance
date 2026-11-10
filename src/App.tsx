@@ -5,6 +5,7 @@ import { carregar } from './data/api'
 import type { Dados } from './data/api'
 import { Login } from './Login'
 import { VisaoGeral } from './VisaoGeral'
+import { Site } from './Site'
 import { Futuro } from './Futuro'
 import { Lancamentos } from './Lancamentos'
 import { Cartoes, Categorias } from './Cadastros'
@@ -79,5 +80,6 @@ export function App() {
     return () => data.subscription.unsubscribe()
   }, [])
   if (sessao === undefined) return null
-  return sessao ? <Logado key={sessao.user.id} /> : <Login />
+  if (sessao) return <Logado key={sessao.user.id} />
+  return location.pathname === '/entrar' ? <Login /> : <Site />
 }
