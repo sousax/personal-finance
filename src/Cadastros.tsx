@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { excluir, salvarCartao, salvarCategoria } from './data/api'
 import type { Dados } from './data/api'
 import { Campo, Erro, useAcao } from './ui'
-import { centavos, formatarBRL, mesDoPagamento, ocorrenciasDoMes, somarMeses } from './domain'
+import { centavos, formatarBRL, mesDoPagamento, mesParaTexto, ocorrenciasDoMes, somarMeses } from './domain'
 import type { Cartao, MesRef, Ocorrencia } from './domain'
 
 type Props = { dados: Dados; recarregar: () => Promise<void> }
@@ -126,39 +126,107 @@ export function Cartoes({ dados, recarregar }: Props) {
   )
 }
 
+const PALETA = ['#8E2440', '#C2364A', '#A63D8F', '#7A3FA8', '#6A4BFF', '#3F51C7', '#3A3F44', '#A0865E']
+const misturar = (cor: string, pct: number) => `color-mix(in srgb, ${cor} ${pct}%, transparent)`
+const contagem = (n: number) => `${n} ${n === 1 ? 'lançamento' : 'lançamentos'}`
+
+type Uso = { despesa: number; receita: number; n: number }
+
+function CartaoCategoria({ c, uso, max, receita, abrir }: { c: { nome: string; cor: string }; uso: Uso; max: number; receita: boolean; abrir: () => void }) {
+  const valor = receita ? uso.receita : uso.despesa
+  return (
+    <button onClick={abrir} className="flex flex-col gap-3 rounded-2xl border border-linha bg-superficie px-[18px] py-4 text-left transition hover:border-suave/40">
+      <span className="flex w-full items-center gap-2.5">
+        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold" style={{ background: misturar(c.cor, 14), color: c.cor }}>{c.nome.trim()[0]?.toUpperCase()}</span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5"><span className="truncate text-sm font-semibold">{c.nome}</span><span className="text-xs text-suave">{contagem(uso.n)}</span></span>
+        <span className={`whitespace-nowrap text-sm font-semibold tabular-nums ${receita ? 'text-ok-texto' : ''}`}>{formatarBRL(centavos(valor))}</span>
+      </span>
+      {!receita && <span className="block h-1.5 w-full overflow-hidden rounded-[3px] bg-elevado"><span className="block h-full" style={{ width: `${max > 0 ? (valor / max) * 100 : 0}%`, background: c.cor }} /></span>}
+    </button>
+  )
+}
+
 export function Categorias({ dados, recarregar }: Props) {
   const [id, setId] = useState<string | undefined>()
   const [nome, setNome] = useState('')
-  const [cor, setCor] = useState('#64748b')
+  const [cor, setCor] = useState(PALETA[5]!)
+  const dialogo = useRef<HTMLDialogElement>(null)
   const { erro, ocupado, rodar } = useAcao(recarregar)
-  const limpar = () => { setId(undefined); setNome(''); setCor('#64748b') }
+
+  const agora = new Date()
+  const mes: MesRef = { ano: agora.getFullYear(), mes: agora.getMonth() + 1 }
+  const uso = new Map<string, Uso>()
+  for (const o of ocorrenciasDoMes(dados.lancamentos, dados.cartoes, mes)) {
+    if (!o.categoriaId) continue
+    const u = uso.get(o.categoriaId) ?? { despesa: 0, receita: 0, n: 0 }
+    u[o.natureza] += o.valor
+    u.n++
+    uso.set(o.categoriaId, u)
+  }
+  const vazio: Uso = { despesa: 0, receita: 0, n: 0 }
+  const usoDe = (cid: string) => uso.get(cid) ?? vazio
+  // Categoria não tem tipo: só receita no mês vai para Receitas, o resto (inclusive sem uso) para Despesas
+  const ehReceita = (cid: string) => usoDe(cid).receita > 0 && usoDe(cid).despesa === 0
+  const ordenar = (k: 'despesa' | 'receita') => (a: { id: string }, b: { id: string }) => usoDe(b.id)[k] - usoDe(a.id)[k]
+  const despesas = dados.categorias.filter((c) => !ehReceita(c.id)).sort(ordenar('despesa'))
+  const receitas = dados.categorias.filter((c) => ehReceita(c.id)).sort(ordenar('receita'))
+  const max = Math.max(0, ...despesas.map((c) => usoDe(c.id).despesa))
+
+  function abrir(c?: { id: string; nome: string; cor: string }) {
+    setId(c?.id); setNome(c?.nome ?? ''); setCor(c?.cor ?? PALETA[5]!)
+    dialogo.current?.showModal()
+  }
+  const fechar = () => dialogo.current?.close()
+  const mesTexto = `${mesParaTexto(mes).split(' ')[0]!.slice(0, 3)} ${mes.ano}`
+
+  const secao = (titulo: string, lista: typeof dados.categorias, receita: boolean) => lista.length > 0 && (
+    <section className="flex flex-col gap-2.5">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.05em] text-suave">{titulo}</h2>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-3">
+        {lista.map((c) => <CartaoCategoria key={c.id} c={c} uso={usoDe(c.id)} max={max} receita={receita} abrir={() => abrir(c)} />)}
+      </div>
+    </section>
+  )
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-[26px] font-semibold">Categorias</h1>
-      <form className="cartao space-y-3" onSubmit={(e) => {
-        e.preventDefault()
-        void rodar(async () => { await salvarCategoria({ id, nome: nome.trim(), cor }); limpar() })
-      }}>
-        <div className="flex gap-3">
-          <div className="flex-1"><Campo rotulo="Nome"><input className="campo" required value={nome} onChange={(e) => setNome(e.target.value)} /></Campo></div>
-          <Campo rotulo="Cor"><input type="color" className="h-[42px] w-14 rounded-xl border border-linha" value={cor} onChange={(e) => setCor(e.target.value)} /></Campo>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <div className="text-[13px] text-suave">Valores de {mesTexto}</div>
+          <h1 className="font-titulo text-[26px] font-semibold">Categorias</h1>
         </div>
-        <Erro msg={erro} />
-        <div className="flex gap-2"><button className="btn" disabled={ocupado}>{ocupado ? 'Salvando...' : id ? 'Salvar' : 'Adicionar categoria'}</button>{id && <button type="button" className="btn-sec" disabled={ocupado} onClick={limpar}>Cancelar</button>}</div>
-      </form>
-      <ul className="cartao lista">
-        {dados.categorias.length === 0 && <li className="py-2 text-sm text-suave">Nenhuma categoria.</li>}
-        {dados.categorias.map((c) => (
-          <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-sm">
-            <span className="flex items-center gap-2"><i className="inline-block h-3 w-3 rounded-full" style={{ background: c.cor }} />{c.nome}</span>
-            <span className="flex gap-2">
-              <button className="btn-sec" disabled={ocupado} onClick={() => { setId(c.id); setNome(c.nome); setCor(c.cor) }}>Editar</button>
-              <button className="btn-perigo" disabled={ocupado} onClick={() => { if (confirm(`Excluir ${c.nome}?`)) void rodar(() => excluir('categorias', c.id)) }}>Excluir</button>
-            </span>
-          </li>
-        ))}
-      </ul>
+        <button className="btn-sec" onClick={() => abrir()}>+ Nova categoria</button>
+      </div>
+
+      {dados.categorias.length === 0 && <p className="cartao text-sm text-suave">Nenhuma categoria. Crie a primeira para organizar seus gastos.</p>}
+      {secao('Despesas', despesas, false)}
+      {secao('Receitas', receitas, true)}
+
+      <dialog ref={dialogo} className="w-[min(440px,calc(100%-32px))] rounded-[20px] border border-linha bg-superficie p-6 text-tinta backdrop:bg-black/50">
+        <form className="flex flex-col gap-4" onSubmit={(e) => {
+          e.preventDefault()
+          void rodar(async () => { await salvarCategoria({ id, nome: nome.trim(), cor }); fechar() })
+        }}>
+          <h2 className="font-titulo text-lg font-semibold">{id ? 'Editar categoria' : 'Nova categoria'}</h2>
+          <Campo rotulo="Nome"><input className="campo" required placeholder="Ex: Educação" value={nome} onChange={(e) => setNome(e.target.value)} /></Campo>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-medium text-suave">Cor</legend>
+            <div className="flex flex-wrap items-center gap-2">
+              {PALETA.map((p) => (
+                <button key={p} type="button" aria-label={`Cor ${p}`} aria-pressed={cor.toLowerCase() === p.toLowerCase()} onClick={() => setCor(p)}
+                  className="h-7 w-7 rounded-full" style={{ background: p, boxShadow: cor.toLowerCase() === p.toLowerCase() ? '0 0 0 2px rgb(var(--superficie)), 0 0 0 4px rgb(var(--tinta))' : 'none' }} />
+              ))}
+              <input type="color" aria-label="Outra cor" value={cor} onChange={(e) => setCor(e.target.value)} className="h-7 w-9 cursor-pointer rounded-md border border-linha bg-transparent" />
+            </div>
+          </fieldset>
+          <Erro msg={erro} />
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+            {id && <button type="button" className="btn-perigo mr-auto" disabled={ocupado} onClick={() => { if (confirm(`Excluir ${nome}?`)) void rodar(async () => { await excluir('categorias', id); fechar() }) }}>Excluir</button>}
+            <button type="button" className="btn-sec" onClick={fechar}>Cancelar</button>
+            <button className="btn" disabled={ocupado || !nome.trim()}>{ocupado ? 'Salvando...' : 'Salvar categoria'}</button>
+          </div>
+        </form>
+      </dialog>
     </div>
   )
 }
