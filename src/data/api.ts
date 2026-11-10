@@ -54,7 +54,12 @@ export const salvarMeta = (m: Omit<Meta, 'id'> & { id?: string }) =>
 export const excluir = (tabela: 'cartoes' | 'categorias' | 'lancamentos' | 'metas_caixinhas', id: string) =>
   ok(supabase.from(tabela).delete().eq('id', id))
 
-export async function sincronizar(dados: Dados, desde: string): Promise<{ resumo: Resumo; avisos: string[] }> {
+export const ligarCartao = (cartaoId: string, pluggyContaId: string) =>
+  ok(supabase.from('cartoes').update({ pluggy_conta_id: pluggyContaId }).eq('id', cartaoId))
+
+export type Sincronia = { resumo: Resumo; avisos: string[]; semVinculo: { id: string; nome: string }[] }
+
+export async function sincronizar(dados: Dados, desde: string): Promise<Sincronia> {
   const { data: sessao } = await supabase.auth.getSession()
   const token = sessao.session?.access_token
   if (!token) throw new Error('Sessão expirada. Entre novamente.')
@@ -80,5 +85,5 @@ export async function sincronizar(dados: Dados, desde: string): Promise<{ resumo
       p_vinculos: plano.vinculos.map((v) => ({ externo_id: v.externoId, lancamento_id: v.lancamentoId, ocorrencia: v.ocorrencia })),
     }))
   }
-  return { resumo: plano.resumo, avisos: [...novosCartoes.avisos, ...plano.avisos] }
+  return { resumo: plano.resumo, avisos: [...novosCartoes.avisos, ...plano.avisos], semVinculo: novosCartoes.semVinculo }
 }

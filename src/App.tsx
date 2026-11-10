@@ -4,7 +4,6 @@ import { supabase } from './data/supabase'
 import { carregar } from './data/api'
 import type { Dados } from './data/api'
 import { Login } from './Login'
-import { VisaoGeral } from './VisaoGeral'
 import { Inicio } from './Inicio'
 import type { Ir } from './Inicio'
 import { MetasCaixinhas } from './Metas'
@@ -18,7 +17,6 @@ import type { MesRef } from './domain'
 
 const abas = [
   { nome: 'Início', curto: 'Início', icone: 'inicio' },
-  { nome: 'Visão do mês', curto: 'Mês', icone: 'mes' },
   { nome: 'Lançamentos', curto: 'Lançar', icone: 'lancamentos' },
   { nome: 'Futuro', curto: 'Futuro', icone: 'futuro' },
   { nome: 'Cartões', curto: 'Cartões', icone: 'cartoes' },
@@ -48,7 +46,6 @@ function Metas({ dados, recarregar }: { dados: Dados; recarregar: () => Promise<
 function Logado({ email }: { email: string }) {
   const [aba, setAba] = useState<Aba>('Início')
   const [pedido, setPedido] = useState<{ n: number } & Pedido>({ n: 0 })
-  const [mes, setMes] = useState(mesAtual)
   const [dados, setDados] = useState<Dados | null>(null)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -94,10 +91,9 @@ function Logado({ email }: { email: string }) {
           {!dados ? (erro ? null : <p className="text-sm text-suave">Carregando...</p>) : (
             <>
               {aba === 'Início' && <Inicio dados={dados} ir={ir} />}
-              {aba === 'Visão do mês' && <VisaoGeral dados={dados} mes={mes} setMes={setMes} recarregar={recarregar} />}
               {aba === 'Lançamentos' && <Lancamentos key={pedido.n} dados={dados} recarregar={recarregar} natureza={pedido.natureza} busca={pedido.busca} />}
-              {aba === 'Futuro' && <Futuro dados={dados} mes={mes} />}
-              {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} mes={mes} setMes={setMes} />}
+              {aba === 'Futuro' && <Futuro dados={dados} mes={mesAtual()} />}
+              {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} />}
               {aba === 'Categorias' && <Categorias dados={dados} recarregar={recarregar} />}
               {aba === 'Metas' && <Metas dados={dados} recarregar={recarregar} />}
             </>

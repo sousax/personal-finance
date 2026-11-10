@@ -24,11 +24,17 @@ const emCentavos = (n: number | null | undefined) => (typeof n === 'number' && N
 const retratoDe = (c: ContaExterna) => ({ limite: emCentavos(c.limite), disponivel: emCentavos(c.disponivel), final: c.final ?? null })
 const mudou = (c: Cartao, r: ReturnType<typeof retratoDe>) => (c.limite ?? null) !== r.limite || (c.disponivel ?? null) !== r.disponivel || (c.final ?? null) !== r.final
 
-// Liga contas de crédito a cartões, cria os que faltam e atualiza limite, disponível e final dos já ligados
-export function planejarCartoes(contas: ContaExterna[], cartoes: Cartao[], novoId: () => string): { cartoes: Cartao[]; avisos: string[] } {
+const chaveNome = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').replace(/\s+/g, ' ').trim().toLowerCase()
+
+// Liga contas de crédito a cartões, cria os que faltam e atualiza limite, disponível e final dos já ligados.
+// Reconectar o banco no Pluggy troca o id da conta, então cartão preso a id que sumiu volta a poder ser ligado.
+export function planejarCartoes(contas: ContaExterna[], cartoes: Cartao[], novoId: () => string): { cartoes: Cartao[]; avisos: string[]; semVinculo: { id: string; nome: string }[] } {
   const saida: Cartao[] = []
   const avisos: string[] = []
+  const semVinculo: { id: string; nome: string }[] = []
   const atuais = [...cartoes]
+  const idsAtuais = new Set(contas.filter((c) => c.tipo === 'CREDIT').map((c) => c.id))
+  const livre = (c: Cartao) => c.pluggyContaId === null || !idsAtuais.has(c.pluggyContaId)
   for (const conta of contas) {
     if (conta.tipo !== 'CREDIT') continue
     const retrato = retratoDe(conta)
@@ -37,7 +43,7 @@ export function planejarCartoes(contas: ContaExterna[], cartoes: Cartao[], novoI
       if (mudou(ligado, retrato)) saida.push({ ...ligado, ...retrato })
       continue
     }
-    const mesmoNome = atuais.find((c) => c.pluggyContaId === null && c.nome.toLowerCase() === conta.nome.toLowerCase())
+    const mesmoNome = atuais.find((c) => livre(c) && chaveNome(c.nome) === chaveNome(conta.nome))
     if (mesmoNome) {
       const ligado = { ...mesmoNome, ...retrato, pluggyContaId: conta.id }
       atuais[atuais.indexOf(mesmoNome)] = ligado
@@ -47,14 +53,14 @@ export function planejarCartoes(contas: ContaExterna[], cartoes: Cartao[], novoI
     const fechamento = conta.fechamento && parseData(conta.fechamento)
     const vencimento = conta.vencimento && parseData(conta.vencimento)
     if (!fechamento || !vencimento) {
-      avisos.push(`Cartão ${conta.nome} sem datas de fechamento e vencimento. Cadastre-o e sincronize de novo.`)
+      semVinculo.push({ id: conta.id, nome: conta.nome })
       continue
     }
     const novo: Cartao = { id: novoId(), nome: conta.nome, diaFechamento: fechamento.dia, diaVencimento: vencimento.dia, pluggyContaId: conta.id, ...retrato }
     atuais.push(novo)
     saida.push(novo)
   }
-  return { cartoes: saida, avisos }
+  return { cartoes: saida, avisos, semVinculo }
 }
 
 export type EntradaImportacao = {

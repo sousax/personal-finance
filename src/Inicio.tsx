@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { centavos, contasDoMes, formatarBRL, ocorrenciasDoMes, parcelasTerminando, progressoMetas, somarMeses, ultimosLancamentos, variacaoPorCategoria, visaoGeral } from './domain'
+import { centavos, contasDoMes, formatarBRL, mesDoPagamento, ocorrenciasDoMes, parcelasTerminando, progressoMetas, somarMeses, ultimosLancamentos, variacaoPorCategoria, visaoGeral } from './domain'
 import type { Conta, MesRef, Ocorrencia } from './domain'
 import type { Dados } from './data/api'
 import { BotaoTema, Icone } from './ui'
 
-export type Ir = (aba: 'Visão do mês' | 'Lançamentos' | 'Cartões' | 'Metas', pedido?: { natureza?: 'receita' | 'despesa'; busca?: string }) => void
+export type Ir = (aba: 'Lançamentos' | 'Cartões' | 'Metas', pedido?: { natureza?: 'receita' | 'despesa'; busca?: string }) => void
 
 const BRILHO = 'radial-gradient(120% 140% at 100% 0%,#4B37C8 0%,#3A1530 46%,#191C1F 80%)'
 const GRAD = 'linear-gradient(90deg,#8E2440,#6A4BFF)'
@@ -33,6 +33,7 @@ export function Inicio({ dados, ir }: { dados: Dados; ir: Ir }) {
   const agora = new Date()
   const diaHoje = agora.getDate()
   const mes: MesRef = { ano: agora.getFullYear(), mes: agora.getMonth() + 1 }
+  const hojeISO = `${mes.ano}-${doisDigitos(mes.mes)}-${doisDigitos(diaHoje)}`
   const anterior = somarMeses(mes, -1)
   const proximo = somarMeses(mes, 1)
   const doMes = (m: MesRef) => {
@@ -63,7 +64,6 @@ export function Inicio({ dados, ir }: { dados: Dados; ir: Ir }) {
   const progresso = progressoMetas(dados.metas, dados.lancamentos, v.caixinhas, mes)
   const meta = progresso.find((p) => p.pct < 100) ?? progresso[0]
 
-  const hojeISO = `${mes.ano}-${doisDigitos(mes.mes)}-${doisDigitos(diaHoje)}`
   const recentes = ultimosLancamentos(dados.lancamentos, hojeISO, 6)
 
   const queda = variacoes.filter((c) => c.pct !== null && c.pct < 0).sort((a, b) => a.pct! - b.pct!)[0]
@@ -130,7 +130,6 @@ export function Inicio({ dados, ir }: { dados: Dados; ir: Ir }) {
           <div className="relative flex flex-wrap gap-2 text-[13px] font-semibold">
             <button onClick={() => ir('Lançamentos', { natureza: 'despesa' })} className="rounded-full bg-white px-3.5 py-[9px] text-[#191C1F]">− Despesa</button>
             <button onClick={() => ir('Lançamentos', { natureza: 'receita' })} className="rounded-full bg-white/[.12] px-3.5 py-[9px]">+ Receita</button>
-            <button onClick={() => ir('Visão do mês')} className="rounded-full bg-white/[.12] px-3.5 py-[9px]">Ver o mês</button>
           </div>
         </section>
 
@@ -185,7 +184,7 @@ export function Inicio({ dados, ir }: { dados: Dados; ir: Ir }) {
           <div className="flex items-baseline justify-between"><h2 className={h2}>Cartões</h2><button onClick={() => ir('Cartões')} className={link}>Ver cartões</button></div>
           {dados.cartoes.length === 0 && <p className="text-sm text-suave">Nenhum cartão cadastrado.</p>}
           {dados.cartoes.map((c, i) => {
-            const m = diaHoje <= c.diaVencimento ? atual : prox
+            const m = doMes(mesDoPagamento(hojeISO, c, 0))
             return (
               <div key={c.id} className="flex items-end justify-between gap-3 rounded-2xl px-4 py-3.5 text-white" style={{ background: CARTOES[i % CARTOES.length] }}>
                 <span className="flex min-w-0 flex-col gap-0.5"><span className="truncate text-xs opacity-70">{c.nome}</span><span className="font-titulo text-[22px] font-semibold tabular-nums">{fmt(somaCartao(m.ocorrencias, c.id))}</span></span>

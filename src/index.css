@@ -32,13 +32,6 @@
   .lista { @apply divide-y divide-fundo; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes inR { from { opacity: 0; transform: translateX(28px) } to { opacity: 1; transform: none } }
-  @keyframes inL { from { opacity: 0; transform: translateX(-28px) } to { opacity: 1; transform: none } }
-  .mes-inR { animation: inR .45s cubic-bezier(.2, .8, .2, 1) }
-  .mes-inL { animation: inL .45s cubic-bezier(.2, .8, .2, 1) }
-}
-
 @keyframes flutuar { 0%, 100% { transform: translateY(0) rotate(-7deg) } 50% { transform: translateY(-8px) rotate(-7deg) } }
 @keyframes cartao-a { 0%, 100% { transform: translateY(0) rotate(-6deg) } 50% { transform: translateY(-8px) rotate(-6deg) } }
 @keyframes cartao-b { 0%, 100% { transform: translateY(0) rotate(5deg) } 50% { transform: translateY(6px) rotate(5deg) } }

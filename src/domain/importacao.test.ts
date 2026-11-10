@@ -33,7 +33,11 @@ describe('planejarCartoes', () => {
   it('cria cartão com o dia de fechamento e vencimento e avisa quando faltam datas', () => {
     const r = planejarCartoes([credito, { ...credito, id: 'x', nome: 'Outro', vencimento: null }, banco], [], novoId)
     expect(r.cartoes).toMatchObject([{ nome: 'Nu', diaFechamento: 5, diaVencimento: 12, pluggyContaId: 'cc' }])
-    expect(r.avisos).toHaveLength(1)
+    expect(r.semVinculo).toEqual([{ id: 'x', nome: 'Outro' }])
+  })
+  it('religa por nome, sem acento e espaço, o cartão preso a uma conta que sumiu do Pluggy', () => {
+    const preso = { ...nu, nome: '  Nú ', pluggyContaId: 'id-antigo' }
+    expect(planejarCartoes([credito], [preso], novoId).cartoes).toMatchObject([{ id: 'k1', pluggyContaId: 'cc' }])
   })
   it('atualiza limite, disponível e final do cartão já ligado só quando mudam', () => {
     const comLimite = { ...credito, limite: 8000, disponivel: 5833.1, final: '4821' }

@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { centavos, parseData, parseValor, valorParaTexto } from './domain'
-import type { Lancamento, Recorrencia, Resumo } from './domain'
-import { excluir, salvarLancamento, sincronizar } from './data/api'
+import type { Lancamento, Recorrencia } from './domain'
+import { excluir, ligarCartao, salvarLancamento, sincronizar } from './data/api'
+import type { Sincronia } from './data/api'
 import type { Dados } from './data/api'
 import { Campo, Dinheiro, Erro, useAcao } from './ui'
 
 type Tipo = Recorrencia['tipo']
 const plural = (n: number, s: string) => `${n} ${s}${n === 1 ? '' : 's'}`
 const hoje = () => new Date().toLocaleDateString('sv-SE')
+// Desde o mês anterior: a fatura em aberto pode ter compras de antes do dia 1º
+const inicioMesAnterior = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() - 1, 1).toLocaleDateString('sv-SE') }
 
 type Form = {
   id?: string; natureza: 'receita' | 'despesa'; descricao: string; valor: string
@@ -57,7 +60,8 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
   const lista = termo ? dados.lancamentos.filter((l) => l.descricao.toLocaleLowerCase('pt-BR').includes(termo)) : dados.lancamentos
   const { erro, ocupado, rodar: tentar } = useAcao(recarregar)
   const sincronia = useAcao(recarregar)
-  const [sync, setSync] = useState<{ resumo: Resumo; avisos: string[] } | null>(null)
+  const [sync, setSync] = useState<Sincronia | null>(null)
+  const [escolha, setEscolha] = useState<Record<string, string>>({})
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }))
 
   return (
@@ -66,7 +70,7 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
         <h1 className="text-[26px] font-semibold">{f.id ? 'Editar lançamento' : 'Novo lançamento'}</h1>
         <button type="button" className="btn-sec" disabled={ocupado || sincronia.ocupado} onClick={() => void sincronia.rodar(async () => {
           setSync(null)
-          setSync(await sincronizar(dados, `${hoje().slice(0, 8)}01`))
+          setSync(await sincronizar(dados, inicioMesAnterior()))
         })}>{sincronia.ocupado ? 'Sincronizando...' : 'Sincronizar'}</button>
       </div>
       <Erro msg={sincronia.erro} />
@@ -74,6 +78,30 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
         <div className="space-y-1 text-sm text-suave">
           <p>{plural(sync.resumo.importadas, 'importada')}, {plural(sync.resumo.vinculadas, 'vinculada')}, {plural(sync.resumo.ignoradas, 'ignorada')}</p>
           {sync.avisos.map((a) => <p key={a}>{a}</p>)}
+          {sync.semVinculo.length > 0 && (
+            <div className="cartao space-y-3 text-tinta">
+              <p className="text-sm">O Pluggy não informou fechamento e vencimento destes cartões. Escolha a qual cartão cada um pertence e sincronize de novo para importar as compras.</p>
+              {sync.semVinculo.map((conta) => (
+                <form key={conta.id} className="flex flex-wrap items-center gap-2" onSubmit={(e) => {
+                  e.preventDefault()
+                  const cartaoId = escolha[conta.id]
+                  if (!cartaoId) return
+                  void sincronia.rodar(async () => {
+                    await ligarCartao(cartaoId, conta.id)
+                    setSync({ ...sync, semVinculo: sync.semVinculo.filter((c) => c.id !== conta.id) })
+                  })
+                }}>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{conta.nome}</span>
+                  <select className="campo w-auto" aria-label={`Cartão para ${conta.nome}`} value={escolha[conta.id] ?? ''} onChange={(e) => setEscolha({ ...escolha, [conta.id]: e.target.value })}>
+                    <option value="">Escolha o cartão</option>
+                    {dados.cartoes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                  </select>
+                  <button className="btn-sec" disabled={!escolha[conta.id] || sincronia.ocupado}>Ligar</button>
+                </form>
+              ))}
+              {dados.cartoes.length === 0 && <p className="text-sm text-suave">Cadastre os cartões em Cartões › Gerenciar cartões primeiro.</p>}
+            </div>
+          )}
         </div>
       )}
       <form className="cartao space-y-3" onSubmit={(e) => {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { excluir, salvarCartao, salvarCategoria } from './data/api'
 import type { Dados } from './data/api'
 import { Campo, Erro, useAcao } from './ui'
-import { centavos, formatarBRL, mesParaTexto, ocorrenciasDoMes, somarMeses } from './domain'
+import { centavos, formatarBRL, mesDoPagamento, ocorrenciasDoMes, somarMeses } from './domain'
 import type { Cartao, MesRef, Ocorrencia } from './domain'
 
 type Props = { dados: Dados; recarregar: () => Promise<void> }
@@ -13,7 +13,9 @@ const TEMAS = [
 ]
 const PARCELA = /\s*\((\d+\/\d+)\)$/
 
-function Fatura({ cartao, itens, tema, cor }: { cartao: Cartao; itens: Ocorrencia[]; tema: (typeof TEMAS)[number]; cor: (id: string | null) => string }) {
+const mesCurto = (m: MesRef) => new Date(Date.UTC(m.ano, m.mes - 1, 1)).toLocaleDateString('pt-BR', { month: 'short', timeZone: 'UTC' }).replace('.', '')
+
+function Fatura({ cartao, itens, tema, cor, mes, aberta }: { cartao: Cartao; itens: Ocorrencia[]; tema: (typeof TEMAS)[number]; cor: (id: string | null) => string; mes: MesRef; aberta: boolean }) {
   const total = itens.reduce((s, o) => s + o.valor, 0)
   const { limite, disponivel } = cartao
   const uso = limite && disponivel != null ? Math.min(100, Math.max(0, Math.round(((limite - disponivel) / limite) * 100))) : null
@@ -24,10 +26,10 @@ function Fatura({ cartao, itens, tema, cor }: { cartao: Cartao; itens: Ocorrenci
           <h2 className="truncate font-titulo text-lg font-semibold">{cartao.nome}</h2>
           {cartao.final && <span className="whitespace-nowrap text-[13px] tracking-[.12em] text-white/80">•••• {cartao.final}</span>}
         </div>
-        <div className="flex flex-col gap-1"><span className="text-xs text-white/60">Fatura atual</span><span className="font-titulo text-[30px] font-semibold leading-none tabular-nums">{formatarBRL(centavos(total))}</span></div>
+        <div className="flex flex-col gap-1"><span className="text-xs text-white/60">{aberta ? 'Fatura atual' : `Fatura de ${mesCurto(mes)}/${mes.ano}`}</span><span className="font-titulo text-[30px] font-semibold leading-none tabular-nums">{formatarBRL(centavos(total))}</span></div>
       </div>
       <div className="flex flex-col gap-3 px-2.5">
-        <div className="flex justify-between text-[13px] text-suave"><span>Fecha dia {cartao.diaFechamento}</span><span>Vence dia {cartao.diaVencimento}</span></div>
+        <div className="flex justify-between text-[13px] text-suave"><span>Fecha dia {cartao.diaFechamento}</span><span>Vence {String(cartao.diaVencimento).padStart(2, '0')} {mesCurto(mes)}</span></div>
         {uso !== null && (
           <div className="flex flex-col gap-2">
             <div className="h-2 overflow-hidden rounded-full bg-elevado"><div className="h-full rounded-full" style={{ width: `${uso}%`, background: tema.barra }} /></div>
@@ -52,8 +54,15 @@ function Fatura({ cartao, itens, tema, cor }: { cartao: Cartao; itens: Ocorrenci
   )
 }
 
-export function Cartoes({ dados, recarregar, mes, setMes }: Props & { mes: MesRef; setMes: (m: MesRef) => void }) {
-  const ocorrencias = ocorrenciasDoMes(dados.lancamentos, dados.cartoes, mes).filter((o) => o.natureza === 'despesa' && o.cartaoId)
+// Fatura em aberto = a que recebe uma compra feita hoje; as setas andam uma fatura por vez a partir dela
+export function Cartoes({ dados, recarregar }: Props) {
+  const [desvio, setDesvio] = useState(0)
+  const hoje = new Date().toLocaleDateString('sv-SE')
+  const faturaDe = (c: Cartao) => {
+    const mes = somarMeses(mesDoPagamento(hoje, c, 0), desvio)
+    const itens = ocorrenciasDoMes(dados.lancamentos, dados.cartoes, mes).filter((o) => o.natureza === 'despesa' && o.cartaoId === c.id).sort((a, b) => b.valor - a.valor)
+    return { mes, itens }
+  }
   const cor = (id: string | null) => dados.categorias.find((c) => c.id === id)?.cor ?? '#A1A1AA'
 
   const [id, setId] = useState<string | undefined>()
@@ -67,20 +76,18 @@ export function Cartoes({ dados, recarregar, mes, setMes }: Props & { mes: MesRe
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-[13px] text-suave">Faturas de {mesParaTexto(mes).replace(' de ', ' ')}</div>
+          <div className="text-[13px] text-suave">{desvio === 0 ? 'Faturas em aberto' : desvio < 0 ? `${-desvio} ${desvio === -1 ? 'fatura' : 'faturas'} antes da atual` : `${desvio} ${desvio === 1 ? 'fatura' : 'faturas'} depois da atual`}</div>
           <h1 className="font-titulo text-[28px] font-semibold">Cartões</h1>
         </div>
         <div className="flex h-10 items-center rounded-full border border-linha bg-superficie text-[13px]">
-          <button className="h-full rounded-l-full px-3.5 hover:bg-elevado" aria-label="Mês anterior" onClick={() => setMes(somarMeses(mes, -1))}>&lsaquo;</button>
-          <button className="h-full rounded-r-full px-3.5 hover:bg-elevado" aria-label="Próximo mês" onClick={() => setMes(somarMeses(mes, 1))}>&rsaquo;</button>
+          <button className="h-full rounded-l-full px-3.5 hover:bg-elevado" aria-label="Fatura anterior" onClick={() => setDesvio(desvio - 1)}>&lsaquo;</button>
+          {desvio !== 0 && <button className="h-full px-2 font-medium hover:bg-elevado" onClick={() => setDesvio(0)}>Atual</button>}
+          <button className="h-full rounded-r-full px-3.5 hover:bg-elevado" aria-label="Próxima fatura" onClick={() => setDesvio(desvio + 1)}>&rsaquo;</button>
         </div>
       </div>
       {dados.cartoes.length > 0 && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] items-start gap-4">
-          {dados.cartoes.map((c, i) => (
-            <Fatura key={c.id} cartao={c} tema={TEMAS[i % TEMAS.length]!} cor={cor}
-              itens={ocorrencias.filter((o) => o.cartaoId === c.id).sort((a, b) => b.valor - a.valor)} />
-          ))}
+          {dados.cartoes.map((c, i) => <Fatura key={c.id} cartao={c} tema={TEMAS[i % TEMAS.length]!} cor={cor} aberta={desvio === 0} {...faturaDe(c)} />)}
         </div>
       )}
       <details className="cartao" open={dados.cartoes.length === 0 || id !== undefined}>
