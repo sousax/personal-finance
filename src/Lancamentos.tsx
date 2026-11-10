@@ -13,7 +13,7 @@ type Form = {
   id?: string; natureza: 'receita' | 'despesa'; descricao: string; valor: string
   categoriaId: string; cartaoId: string; tipo: Tipo; data: string; fim: string; parcelas: string
 }
-const vazio = (): Form => ({ natureza: 'despesa', descricao: '', valor: '', categoriaId: '', cartaoId: '', tipo: 'unica', data: hoje(), fim: '', parcelas: '2' })
+const vazio = (natureza: Form['natureza'] = 'despesa'): Form => ({ natureza, descricao: '', valor: '', categoriaId: '', cartaoId: '', tipo: 'unica', data: hoje(), fim: '', parcelas: '2' })
 
 function doLancamento(l: Lancamento): Form {
   const r = l.recorrencia
@@ -50,8 +50,11 @@ const resumoRec = (r: Recorrencia) =>
     : r.tipo === 'mensal' ? `mensal desde ${r.inicio.split('-').reverse().join('/')}${r.fim ? ` até ${r.fim.split('-').reverse().join('/')}` : ''}`
       : `${r.parcelas}x, compra em ${r.dataCompra.split('-').reverse().join('/')}`
 
-export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: () => Promise<void> }) {
-  const [f, setF] = useState<Form>(vazio)
+export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial = '' }: { dados: Dados; recarregar: () => Promise<void>; natureza?: Form['natureza']; busca?: string }) {
+  const [f, setF] = useState<Form>(() => vazio(natureza))
+  const [busca, setBusca] = useState(buscaInicial)
+  const termo = busca.trim().toLocaleLowerCase('pt-BR')
+  const lista = termo ? dados.lancamentos.filter((l) => l.descricao.toLocaleLowerCase('pt-BR').includes(termo)) : dados.lancamentos
   const { erro, ocupado, rodar: tentar } = useAcao(recarregar)
   const sincronia = useAcao(recarregar)
   const [sync, setSync] = useState<{ resumo: Resumo; avisos: string[] } | null>(null)
@@ -121,9 +124,10 @@ export function Lancamentos({ dados, recarregar }: { dados: Dados; recarregar: (
         </div>
       </form>
 
+      <input className="campo" type="search" aria-label="Buscar lançamento" placeholder="Buscar lançamento" value={busca} onChange={(e) => setBusca(e.target.value)} />
       <ul className="cartao lista">
-        {dados.lancamentos.length === 0 && <li className="py-2 text-sm text-suave">Nenhum lançamento.</li>}
-        {dados.lancamentos.map((l) => (
+        {lista.length === 0 && <li className="py-2 text-sm text-suave">{termo ? 'Nenhum lançamento encontrado.' : 'Nenhum lançamento.'}</li>}
+        {lista.map((l) => (
           <li key={l.id} className="space-y-1 py-2 text-sm">
             <div className="flex justify-between gap-2">
               <span className="min-w-0 truncate font-medium">{l.descricao}</span>
