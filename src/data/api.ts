@@ -56,6 +56,9 @@ export const salvarMeta = (m: Omit<Meta, 'id'> & { id?: string }) =>
 export const excluir = (tabela: 'cartoes' | 'categorias' | 'lancamentos' | 'metas_caixinhas', id: string) =>
   ok(supabase.from(tabela).delete().eq('id', id))
 
+export const categorizar = (ids: string[], categoriaId: string) =>
+  ok(supabase.from('lancamentos').update({ categoria_id: categoriaId }).in('id', ids))
+
 export const ligarCartao = (cartaoId: string, pluggyContaId: string) =>
   ok(supabase.from('cartoes').update({ pluggy_conta_id: pluggyContaId }).eq('id', cartaoId))
 

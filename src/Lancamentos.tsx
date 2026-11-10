@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { centavos, formatarBRL, ocorrenciasDoMes, parseData, parseValor, valorParaTexto, visaoGeral } from './domain'
+import { centavos, formatarBRL, mesmoNomeSemCategoria, ocorrenciasDoMes, parseData, parseValor, valorParaTexto, visaoGeral } from './domain'
 import type { Lancamento, MesRef, Movimento, Recorrencia } from './domain'
-import { excluir, ligarCartao, salvarLancamento, sincronizar } from './data/api'
+import { categorizar, excluir, ligarCartao, salvarLancamento, sincronizar } from './data/api'
 import type { Sincronia } from './data/api'
 import type { Dados } from './data/api'
 import { Erro, useAcao } from './ui'
@@ -196,6 +196,7 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
   const [f, setF] = useState<Form>(() => vazio(natureza))
   const [escolhendo, setEscolhendo] = useState<string | null>(null)
   const [confirmar, setConfirmar] = useState<string | null>(null)
+  const [sugestao, setSugestao] = useState<{ categoriaId: string; categoria: string; nome: string; ids: string[] } | null>(null)
   const acao = useAcao(recarregar)
   const sincronia = useAcao(recarregar)
   const [sync, setSync] = useState<Sincronia | null>(null)
@@ -309,6 +310,15 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
           </div>
 
           <Erro msg={acao.erro} />
+          {sugestao && (
+            <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-violeta/30 bg-violeta/10 px-4 py-3">
+              <span className="text-sm">Aplicar <b>{sugestao.categoria}</b> {sugestao.ids.length === 1 ? 'ao outro lançamento' : `aos outros ${sugestao.ids.length} lançamentos`} com o nome "{sugestao.nome}"? Os próximos que chegarem pelo Sincronizar já vêm categorizados.</span>
+              <span className="flex gap-1.5">
+                <button className="h-8 rounded-full bg-superficie px-3 text-[13px] font-semibold" onClick={() => setSugestao(null)}>Agora não</button>
+                <button className="h-8 rounded-full bg-tinta px-3 text-[13px] font-semibold text-superficie" disabled={acao.ocupado} onClick={() => void acao.rodar(async () => { await categorizar(sugestao.ids, sugestao.categoriaId); setSugestao(null) })}>Aplicar</button>
+              </span>
+            </div>
+          )}
           <div className="rounded-3xl bg-superficie px-[22px] pb-3.5 pt-2">
             {grupos.length === 0 && (
               <div className="flex flex-col items-center gap-1.5 px-3 py-12 text-center"><span className="font-titulo text-lg font-semibold">Nada por aqui</span><span className="text-sm text-suave">{termo || filtro !== 'todos' ? 'Nenhum lançamento com esse filtro.' : 'Nenhum lançamento neste mês.'}</span></div>
@@ -349,7 +359,11 @@ export function Lancamentos({ dados, recarregar, natureza, busca: buscaInicial =
                       {escolhendo === x.chave && x.l && (
                         <div className="flex flex-wrap gap-1.5 pb-3 pl-14 pt-1">
                           {dados.categorias.filter((c) => (c.tipo ?? 'despesa') === x.o.natureza).map((c) => (
-                            <button key={c.id} disabled={acao.ocupado} onClick={() => void acao.rodar(async () => { await salvarLancamento({ ...x.l!, categoriaId: c.id }); setEscolhendo(null) })}
+                            <button key={c.id} disabled={acao.ocupado} onClick={() => void acao.rodar(async () => {
+                              await salvarLancamento({ ...x.l!, categoriaId: c.id }); setEscolhendo(null)
+                              const outros = mesmoNomeSemCategoria(dados.lancamentos, x.l!)
+                              setSugestao(outros.length ? { categoriaId: c.id, categoria: c.nome, nome: x.titulo, ids: outros.map((l) => l.id) } : null)
+                            })}
                               className="flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold" style={{ background: misturar(c.cor, 14) }}>
                               <span className="h-2 w-2 rounded-full" style={{ background: c.cor }} />{c.nome}
                             </button>

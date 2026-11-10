@@ -38,6 +38,10 @@ function contraparte(descricao: string): { nome: string; prefixo: boolean } {
   return { nome: depois.replace(PREFIXO, '').replace(/^[\d.\s]+/, '').trim(), prefixo }
 }
 
+// Mesmo nome para aprender categoria: sem prefixo bancário, sufixo de parcela, acento, caixa e espaços extras
+export const chaveDescricao = (descricao: string) =>
+  semAcento(contraparte(descricao).nome.replace(/\s*\(\d+\/\d+\)$/, '')).replace(/\s+/g, ' ').trim()
+
 // Reservar é despesa, retirar é receita. O nome sai em título para casar com as metas.
 export function caixinhaDe(natureza: Ocorrencia['natureza'], descricao: string): string | null {
   const nome = (natureza === 'despesa' ? RESERVADO : RETIRADO).exec(descricao)?.[1]

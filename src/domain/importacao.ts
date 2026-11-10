@@ -1,6 +1,7 @@
 import type { Cartao, DataISO, Lancamento, MesRef } from './tipos'
 import { centavos, diasNoMes, indiceMes, mesDe, parseData, somarMeses } from './dinheiro'
 import { mesDoPagamento, ocorrenciasDoMes } from './projecao'
+import { categoriaAprendida } from './categorizacao'
 
 export type ContaExterna = {
   id: string; nome: string; tipo: 'BANK' | 'CREDIT'
@@ -133,7 +134,7 @@ export function planejarImportacao(e: EntradaImportacao): { lancamentos: Lancame
       if (achada) { resolver(achada.id, oc); resumo.vinculadas++; continue }
       const nova: Lancamento = {
         id: e.novoId(), natureza, descricao: descricao.replace(SUFIXO_PARCELA, '') || descricao, valor: t.valorTotal ? aoCentavo(t.valorTotal) : centavos(valor * n),
-        categoriaId: null, cartaoId, recorrencia: { tipo: 'parcelada', dataCompra: compra, parcelas: n },
+        categoriaId: categoriaAprendida([...e.lancamentos, ...novosLanc], natureza, descricao), cartaoId, recorrencia: { tipo: 'parcelada', dataCompra: compra, parcelas: n },
       }
       parceladas.push(nova); novosLanc.push(nova); resumo.importadas++
       resolver(nova.id, oc)
@@ -147,7 +148,7 @@ export function planejarImportacao(e: EntradaImportacao): { lancamentos: Lancame
     if (igual) { resolver(igual.lancamentoId, oc); resumo.vinculadas++; continue }
     const nova: Lancamento = {
       id: e.novoId(), natureza, descricao, valor,
-      categoriaId: null, cartaoId, recorrencia: { tipo: 'unica', data: t.data },
+      categoriaId: categoriaAprendida([...e.lancamentos, ...novosLanc], natureza, descricao), cartaoId, recorrencia: { tipo: 'unica', data: t.data },
     }
     novosLanc.push(nova); resumo.importadas++
     resolver(nova.id, oc)
