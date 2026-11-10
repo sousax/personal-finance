@@ -17,7 +17,7 @@ Se o projeto exigir confirmação de e-mail, desative em **Authentication > Prov
 1. Suba o repositório para o GitHub.
 2. Na Vercel, **Add New > Project** e importe o repositório (preset Vite é detectado).
 3. Em **Environment Variables**, defina `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-4. Deploy. Não há rotas, então nenhum rewrite é necessário.
+4. Deploy. O `vercel.json` manda qualquer caminho fora de `/api` para o `index.html` (ex.: `/entrar`).
 
 ## Testes
 

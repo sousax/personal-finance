@@ -40,3 +40,6 @@
 }
 
 @keyframes flutuar { 0%, 100% { transform: translateY(0) rotate(-7deg) } 50% { transform: translateY(-8px) rotate(-7deg) } }
+@keyframes cartao-a { 0%, 100% { transform: translateY(0) rotate(-6deg) } 50% { transform: translateY(-8px) rotate(-6deg) } }
+@keyframes cartao-b { 0%, 100% { transform: translateY(0) rotate(5deg) } 50% { transform: translateY(6px) rotate(5deg) } }
+@keyframes barra { from { background-position: 0% 0 } to { background-position: 200% 0 } }
