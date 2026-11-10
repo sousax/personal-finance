@@ -1,7 +1,10 @@
 import { centavos, parseData } from '../domain'
 import type { Cartao, Categoria, DataISO, Lancamento, Meta, Recorrencia } from '../domain'
 
-export type LinhaCartao = { id: string; nome: string; dia_fechamento: number; dia_vencimento: number; pluggy_conta_id: string | null }
+export type LinhaCartao = {
+  id: string; nome: string; dia_fechamento: number; dia_vencimento: number; pluggy_conta_id: string | null
+  limite_centavos?: number | string | null; disponivel_centavos?: number | string | null; final?: string | null
+}
 export type LinhaCategoria = { id: string; nome: string; cor: string }
 export type LinhaLancamento = {
   id: string
@@ -22,9 +25,15 @@ export type LinhaMeta = { id: string; nome: string; meta_centavos: number | stri
 const dia = (n: unknown) => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 31
 const dataOk = (d: string | null): d is DataISO => d !== null && parseData(d) !== null
 
+// bigint chega como texto do PostgREST
+const centavosOuNull = (v: number | string | null | undefined) => (v === null || v === undefined || !Number.isSafeInteger(Number(v)) ? null : centavos(Number(v)))
+
 export function lerCartao(r: LinhaCartao): Cartao {
   if (!dia(r.dia_fechamento) || !dia(r.dia_vencimento)) throw new Error(`cartão inválido: ${r.id}`)
-  return { id: r.id, nome: r.nome, diaFechamento: r.dia_fechamento, diaVencimento: r.dia_vencimento, pluggyContaId: r.pluggy_conta_id }
+  return {
+    id: r.id, nome: r.nome, diaFechamento: r.dia_fechamento, diaVencimento: r.dia_vencimento, pluggyContaId: r.pluggy_conta_id,
+    limite: centavosOuNull(r.limite_centavos), disponivel: centavosOuNull(r.disponivel_centavos), final: r.final ?? null,
+  }
 }
 
 export function lerMeta(r: LinhaMeta): Meta {

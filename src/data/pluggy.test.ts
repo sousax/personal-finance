@@ -16,7 +16,7 @@ function stub(usuario: string | null) {
     if (url.endsWith('/auth/v1/user')) return usuario ? ok({ id: usuario }) : new Response('{}', { status: 401 })
     if (url.endsWith('/auth')) return ok({ apiKey: 'chave-api-secreta' })
     if (url.includes('/accounts')) return ok({ results: [
-      { id: 'a1', type: 'CREDIT', name: 'Cartão', marketingName: 'Nubank', creditData: { balanceCloseDate: '2026-11-05T00:00:00.000Z', balanceDueDate: '2026-11-12T00:00:00.000Z' } },
+      { id: 'a1', type: 'CREDIT', name: 'Cartão', marketingName: 'Nubank', number: '**** 4821', creditData: { balanceCloseDate: '2026-11-05T00:00:00.000Z', balanceDueDate: '2026-11-12T00:00:00.000Z', creditLimit: 8000, availableCreditLimit: 5833.1 } },
       { id: 'a2', type: 'BANK', name: 'Conta corrente' },
     ] })
     if (url.includes('accountId=a1') && !url.includes('page=2')) return ok({ results: [{
@@ -66,8 +66,8 @@ describe('POST /api/pluggy', () => {
     const corpo = JSON.parse(texto)
     expect(r.status).toBe(200)
     expect(corpo.contas).toEqual([
-      { id: 'a1', nome: 'Nubank', tipo: 'CREDIT', fechamento: '2026-11-05', vencimento: '2026-11-12' },
-      { id: 'a2', nome: 'Conta corrente', tipo: 'BANK', fechamento: null, vencimento: null },
+      { id: 'a1', nome: 'Nubank', tipo: 'CREDIT', fechamento: '2026-11-05', vencimento: '2026-11-12', limite: 8000, disponivel: 5833.1, final: '4821' },
+      { id: 'a2', nome: 'Conta corrente', tipo: 'BANK', fechamento: null, vencimento: null, limite: null, disponivel: null, final: null },
     ])
     expect(corpo.transacoes).toHaveLength(3)
     expect(corpo.transacoes[0]).toEqual({

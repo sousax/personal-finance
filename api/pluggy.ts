@@ -53,6 +53,7 @@ export async function POST(req: Request): Promise<Response> {
         contas.push({
           id: c.id, nome: str(c.marketingName) ?? str(c.name) ?? 'Conta', tipo: c.type === 'CREDIT' ? 'CREDIT' : 'BANK',
           fechamento: dia(credito.balanceCloseDate), vencimento: dia(credito.balanceDueDate),
+          limite: num(credito.creditLimit), disponivel: num(credito.availableCreditLimit), final: /(\d{4})\D*$/.exec(str(c.number) ?? '')?.[1] ?? null,
         })
         let proxima: string | null = `?accountId=${encodeURIComponent(String(c.id))}&dateFrom=${desde}T00:00:00.000Z`
         while (proxima) {

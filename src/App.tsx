@@ -97,7 +97,7 @@ function Logado({ email }: { email: string }) {
               {aba === 'Visão do mês' && <VisaoGeral dados={dados} mes={mes} setMes={setMes} recarregar={recarregar} />}
               {aba === 'Lançamentos' && <Lancamentos key={pedido.n} dados={dados} recarregar={recarregar} natureza={pedido.natureza} busca={pedido.busca} />}
               {aba === 'Futuro' && <Futuro dados={dados} mes={mes} />}
-              {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} />}
+              {aba === 'Cartões' && <Cartoes dados={dados} recarregar={recarregar} mes={mes} setMes={setMes} />}
               {aba === 'Categorias' && <Categorias dados={dados} recarregar={recarregar} />}
               {aba === 'Metas' && <Metas dados={dados} recarregar={recarregar} />}
             </>

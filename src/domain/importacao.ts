@@ -5,6 +5,7 @@ import { mesDoPagamento, ocorrenciasDoMes } from './projecao'
 export type ContaExterna = {
   id: string; nome: string; tipo: 'BANK' | 'CREDIT'
   fechamento: DataISO | null; vencimento: DataISO | null
+  limite?: number | null; disponivel?: number | null; final?: string | null
 }
 
 export type TransacaoExterna = {
@@ -19,15 +20,26 @@ export type Vinculo = { externoId: string; lancamentoId: string | null; ocorrenc
 
 export type Resumo = { importadas: number; vinculadas: number; ignoradas: number }
 
+const emCentavos = (n: number | null | undefined) => (typeof n === 'number' && Number.isFinite(n) ? centavos(Math.round(n * 100)) : null)
+const retratoDe = (c: ContaExterna) => ({ limite: emCentavos(c.limite), disponivel: emCentavos(c.disponivel), final: c.final ?? null })
+const mudou = (c: Cartao, r: ReturnType<typeof retratoDe>) => (c.limite ?? null) !== r.limite || (c.disponivel ?? null) !== r.disponivel || (c.final ?? null) !== r.final
+
+// Liga contas de crédito a cartões, cria os que faltam e atualiza limite, disponível e final dos já ligados
 export function planejarCartoes(contas: ContaExterna[], cartoes: Cartao[], novoId: () => string): { cartoes: Cartao[]; avisos: string[] } {
   const saida: Cartao[] = []
   const avisos: string[] = []
   const atuais = [...cartoes]
   for (const conta of contas) {
-    if (conta.tipo !== 'CREDIT' || atuais.some((c) => c.pluggyContaId === conta.id)) continue
+    if (conta.tipo !== 'CREDIT') continue
+    const retrato = retratoDe(conta)
+    const ligado = atuais.find((c) => c.pluggyContaId === conta.id)
+    if (ligado) {
+      if (mudou(ligado, retrato)) saida.push({ ...ligado, ...retrato })
+      continue
+    }
     const mesmoNome = atuais.find((c) => c.pluggyContaId === null && c.nome.toLowerCase() === conta.nome.toLowerCase())
     if (mesmoNome) {
-      const ligado = { ...mesmoNome, pluggyContaId: conta.id }
+      const ligado = { ...mesmoNome, ...retrato, pluggyContaId: conta.id }
       atuais[atuais.indexOf(mesmoNome)] = ligado
       saida.push(ligado)
       continue
@@ -38,7 +50,7 @@ export function planejarCartoes(contas: ContaExterna[], cartoes: Cartao[], novoI
       avisos.push(`Cartão ${conta.nome} sem datas de fechamento e vencimento. Cadastre-o e sincronize de novo.`)
       continue
     }
-    const novo: Cartao = { id: novoId(), nome: conta.nome, diaFechamento: fechamento.dia, diaVencimento: vencimento.dia, pluggyContaId: conta.id }
+    const novo: Cartao = { id: novoId(), nome: conta.nome, diaFechamento: fechamento.dia, diaVencimento: vencimento.dia, pluggyContaId: conta.id, ...retrato }
     atuais.push(novo)
     saida.push(novo)
   }

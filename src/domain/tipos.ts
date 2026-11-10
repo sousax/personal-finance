@@ -2,7 +2,11 @@ export type Centavos = number & { readonly __brand: 'Centavos' }
 export type MesRef = { ano: number; mes: number }
 export type DataISO = string
 
-export type Cartao = { id: string; nome: string; diaFechamento: number; diaVencimento: number; pluggyContaId: string | null }
+export type Cartao = {
+  id: string; nome: string; diaFechamento: number; diaVencimento: number; pluggyContaId: string | null
+  // Retrato do Pluggy na última sincronização; ausentes em cartão manual
+  limite?: Centavos | null; disponivel?: Centavos | null; final?: string | null
+}
 export type Categoria = { id: string; nome: string; cor: string }
 
 export type Recorrencia =

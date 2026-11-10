@@ -69,6 +69,7 @@ export async function sincronizar(dados: Dados, desde: string): Promise<{ resumo
   if (novosCartoes.cartoes.length) {
     await ok(supabase.from('cartoes').upsert(novosCartoes.cartoes.map((c) => ({
       id: c.id, nome: c.nome, dia_fechamento: c.diaFechamento, dia_vencimento: c.diaVencimento, pluggy_conta_id: c.pluggyContaId,
+      limite_centavos: c.limite ?? null, disponivel_centavos: c.disponivel ?? null, final: c.final ?? null,
     }))))
   }
   const cartoes = [...dados.cartoes.filter((c) => !novosCartoes.cartoes.some((n) => n.id === c.id)), ...novosCartoes.cartoes]

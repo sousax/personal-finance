@@ -25,15 +25,21 @@ function plano(transacoes: TransacaoExterna[], o: { lancamentos?: Lancamento[]; 
 }
 
 describe('planejarCartoes', () => {
-  it('não mexe em conta já ligada e liga cartão de mesmo nome sem diferenciar caixa', () => {
+  it('conta já ligada sem mudança fica como está, e liga cartão de mesmo nome sem diferenciar caixa', () => {
     expect(planejarCartoes([credito], [nu], novoId).cartoes).toEqual([])
     const manual = { ...nu, nome: 'NU', pluggyContaId: null }
-    expect(planejarCartoes([credito], [manual], novoId).cartoes).toEqual([{ ...manual, pluggyContaId: 'cc' }])
+    expect(planejarCartoes([credito], [manual], novoId).cartoes).toEqual([{ ...manual, pluggyContaId: 'cc', limite: null, disponivel: null, final: null }])
   })
   it('cria cartão com o dia de fechamento e vencimento e avisa quando faltam datas', () => {
     const r = planejarCartoes([credito, { ...credito, id: 'x', nome: 'Outro', vencimento: null }, banco], [], novoId)
     expect(r.cartoes).toMatchObject([{ nome: 'Nu', diaFechamento: 5, diaVencimento: 12, pluggyContaId: 'cc' }])
     expect(r.avisos).toHaveLength(1)
+  })
+  it('atualiza limite, disponível e final do cartão já ligado só quando mudam', () => {
+    const comLimite = { ...credito, limite: 8000, disponivel: 5833.1, final: '4821' }
+    const atualizado = { ...nu, limite: centavos(800000), disponivel: centavos(583310), final: '4821' }
+    expect(planejarCartoes([comLimite], [nu], novoId).cartoes).toEqual([atualizado])
+    expect(planejarCartoes([comLimite], [atualizado], novoId).cartoes).toEqual([])
   })
 })
 
